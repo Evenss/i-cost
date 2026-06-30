@@ -4,6 +4,7 @@ import TokenCostBarCore
 struct PopoverView: View {
     @ObservedObject var model: AppModel
     let openManagement: (ManagementTab) -> Void
+    let quit: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: Geist.Spacing.x3) {
@@ -130,8 +131,8 @@ struct PopoverView: View {
                         openManagement(.sources)
                     }
 
-                    footerButton("⌁", help: "统计详情") {
-                        openManagement(.stats)
+                    footerButton("退出", width: 52, help: "退出应用") {
+                        quit()
                     }
                 }
             }
@@ -155,11 +156,16 @@ struct PopoverView: View {
         .frame(minHeight: 32)
     }
 
-    private func footerButton(_ title: String, help: String, action: @escaping () -> Void) -> some View {
+    private func footerButton(
+        _ title: String,
+        width: CGFloat = 32,
+        help: String,
+        action: @escaping () -> Void
+    ) -> some View {
         Button(action: action) {
             Text(title)
                 .font(Geist.Fonts.button14)
-                .frame(width: 32, height: 32)
+                .frame(width: width, height: 32)
         }
         .buttonStyle(GeistButtonStyle(kind: .icon, height: 32))
         .help(help)

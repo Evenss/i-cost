@@ -46,7 +46,8 @@ final class StatusItemController: NSObject {
         popover.contentViewController = NSHostingController(
             rootView: PopoverView(
                 model: model,
-                openManagement: openManagement
+                openManagement: openManagement,
+                quit: quitAction
             )
         )
     }
