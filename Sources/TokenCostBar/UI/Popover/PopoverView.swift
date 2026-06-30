@@ -60,7 +60,7 @@ struct PopoverView: View {
             DailyTrendView(days: model.snapshot.dailyTrend, compact: true)
                 .padding(.horizontal, Geist.Spacing.x3)
                 .padding(.vertical, Geist.Spacing.x2)
-                .background(Geist.Colors.background)
+                .background(Geist.Colors.backgroundSecondary)
                 .clipShape(RoundedRectangle(cornerRadius: Geist.Radius.small, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: Geist.Radius.small, style: .continuous)
@@ -83,7 +83,7 @@ struct PopoverView: View {
                     .foregroundStyle(Geist.Colors.secondary)
                     .frame(maxWidth: .infinity, minHeight: 42, alignment: .leading)
                     .padding(.horizontal, 12)
-                    .background(Geist.Colors.background)
+                    .background(Geist.Colors.backgroundSecondary)
                     .clipShape(RoundedRectangle(cornerRadius: Geist.Radius.small, style: .continuous))
                     .overlay(
                         RoundedRectangle(cornerRadius: Geist.Radius.small, style: .continuous)
@@ -96,11 +96,11 @@ struct PopoverView: View {
 
                         if index < model.snapshot.agentTotals.count - 1 {
                             Divider()
-                                .overlay(Geist.Colors.border)
+                                .overlay(Geist.Colors.separator)
                         }
                     }
                 }
-                .background(Geist.Colors.background)
+                .background(Geist.Colors.backgroundSecondary)
                 .clipShape(RoundedRectangle(cornerRadius: Geist.Radius.small, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: Geist.Radius.small, style: .continuous)

@@ -41,17 +41,17 @@ struct StatsView: View {
             MetricLine(title: "今日", usd: model.snapshot.todayUSD, cny: model.snapshot.todayCNY)
 
             Divider()
-                .overlay(Geist.Colors.border)
+                .overlay(Geist.Colors.separator)
 
             MetricLine(title: "本周", usd: model.snapshot.weekUSD, cny: model.snapshot.weekCNY)
 
             Divider()
-                .overlay(Geist.Colors.border)
+                .overlay(Geist.Colors.separator)
 
             MetricLine(title: "本月", usd: model.snapshot.monthUSD, cny: model.snapshot.monthCNY)
         }
         .padding(.horizontal, 16)
-        .background(Geist.Colors.background)
+        .background(Geist.Colors.backgroundSecondary)
         .clipShape(RoundedRectangle(cornerRadius: Geist.Radius.small, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: Geist.Radius.small, style: .continuous)
@@ -76,7 +76,7 @@ struct StatsView: View {
             DailyTrendView(days: model.snapshot.dailyTrend)
         }
         .padding(16)
-        .background(Geist.Colors.background)
+        .background(Geist.Colors.backgroundSecondary)
         .clipShape(RoundedRectangle(cornerRadius: Geist.Radius.small, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: Geist.Radius.small, style: .continuous)
@@ -104,7 +104,7 @@ struct StatsView: View {
                     .foregroundStyle(Geist.Colors.secondary)
                     .frame(maxWidth: .infinity, minHeight: 42, alignment: .leading)
                     .padding(.horizontal, 12)
-                    .background(Geist.Colors.background)
+                    .background(Geist.Colors.backgroundSecondary)
                     .clipShape(RoundedRectangle(cornerRadius: Geist.Radius.small, style: .continuous))
                     .overlay(
                         RoundedRectangle(cornerRadius: Geist.Radius.small, style: .continuous)
@@ -117,11 +117,11 @@ struct StatsView: View {
 
                         if index < model.snapshot.agentTotals.count - 1 {
                             Divider()
-                                .overlay(Geist.Colors.border)
+                                .overlay(Geist.Colors.separator)
                         }
                     }
                 }
-                .background(Geist.Colors.background)
+                .background(Geist.Colors.backgroundSecondary)
                 .clipShape(RoundedRectangle(cornerRadius: Geist.Radius.small, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: Geist.Radius.small, style: .continuous)
@@ -130,7 +130,7 @@ struct StatsView: View {
             }
         }
         .padding(16)
-        .background(Geist.Colors.background)
+        .background(Geist.Colors.backgroundSecondary)
         .clipShape(RoundedRectangle(cornerRadius: Geist.Radius.small, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: Geist.Radius.small, style: .continuous)

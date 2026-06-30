@@ -53,7 +53,7 @@ struct ManagementView: View {
             }
         }
         .padding(Geist.Spacing.x1)
-        .background(Geist.Colors.background)
+        .background(Geist.Colors.backgroundSecondary)
         .clipShape(RoundedRectangle(cornerRadius: Geist.Radius.small, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: Geist.Radius.small, style: .continuous)

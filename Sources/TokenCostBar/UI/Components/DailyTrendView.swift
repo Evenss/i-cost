@@ -27,7 +27,7 @@ struct DailyTrendView: View {
 
                     ForEach(Array(points.enumerated()), id: \.offset) { _, point in
                         Circle()
-                            .fill(Geist.Colors.background)
+                            .fill(compact ? Geist.Colors.background : Geist.Colors.backgroundSecondary)
                             .frame(width: compact ? 8 : 10, height: compact ? 8 : 10)
                             .overlay(
                                 Circle()
@@ -138,7 +138,7 @@ struct DailyTrendView: View {
         }
         .padding(.horizontal, Geist.Spacing.x2)
         .frame(width: tooltipWidth, height: tooltipHeight)
-        .background(Geist.Colors.background)
+        .background(Geist.Colors.backgroundSecondary)
         .clipShape(RoundedRectangle(cornerRadius: Geist.Radius.small, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: Geist.Radius.small, style: .continuous)

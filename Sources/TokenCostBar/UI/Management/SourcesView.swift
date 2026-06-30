@@ -46,12 +46,12 @@ struct SourcesView: View {
 
                     if index < model.snapshot.sourceStates.count - 1 {
                         Divider()
-                            .overlay(Geist.Colors.border)
+                            .overlay(Geist.Colors.separator)
                     }
                 }
             }
         }
-        .background(Geist.Colors.background)
+        .background(Geist.Colors.backgroundSecondary)
         .clipShape(RoundedRectangle(cornerRadius: Geist.Radius.small, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: Geist.Radius.small, style: .continuous)
@@ -72,7 +72,7 @@ struct SourcesView: View {
         .foregroundStyle(Geist.Colors.secondary)
         .padding(.horizontal, 16)
         .frame(height: 36)
-        .background(Geist.Colors.backgroundSecondary)
+        .background(Geist.Colors.overlay)
     }
 
     private func sourceRow(_ source: SourceState) -> some View {

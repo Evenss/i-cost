@@ -3,16 +3,18 @@ import SwiftUI
 enum Geist {
     enum Colors {
         static let primary = Color(light: "#171717", dark: "#ededed")
-        static let secondary = Color(light: "#4d4d4d", dark: "#a0a0a0")
+        static let secondary = Color(light: "#4d4d4d", dark: "#aaa9a6")
         static let disabled = Color(light: "#8f8f8f", dark: "#8f8f8f")
-        static let background = Color(light: "#ffffff", dark: "#000000")
-        static let backgroundSecondary = Color(light: "#fafafa", dark: "#0a0a0a")
-        static let neutral = Color(light: "#f2f2f2", dark: "#1a1a1a")
-        static let border = Color(light: "#00000014", dark: "#ffffff24")
-        static let borderHover = Color(light: "#00000036", dark: "#ffffff3d")
-        static let separator = Color(light: "#00000015", dark: "#ffffff17")
+        static let background = Color(light: "#ffffff", dark: "#30302f")
+        static let backgroundSecondary = Color(light: "#fafafa", dark: "#252928")
+        static let neutral = Color(light: "#f2f2f2", dark: "#4a4d4b")
+        static let border = Color(light: "#00000014", dark: "#ffffff20")
+        static let borderHover = Color(light: "#00000036", dark: "#ffffff40")
+        static let separator = Color(light: "#00000015", dark: "#ffffff18")
         static let overlay = Color(light: "#0000000d", dark: "#ffffff12")
-        static let blue = Color(light: "#006bff", dark: "#47a8ff")
+        static let highlight = Color(light: "#ffffff", dark: "#ffffff1f")
+        static let shadow = Color(light: "#00000014", dark: "#0000004d")
+        static let blue = Color(light: "#006bff", dark: "#1e91ff")
         static let red = Color(light: "#ea001d", dark: "#e2162a")
         static let amber = Color(light: "#aa4d00", dark: "#ff9300")
         static let green = Color(light: "#28a948", dark: "#00ca50")
@@ -105,12 +107,13 @@ struct GeistPanel: ViewModifier {
     func body(content: Content) -> some View {
         content
             .padding(padding)
-            .background(Geist.Colors.background)
+            .background(Geist.Colors.backgroundSecondary)
             .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: radius, style: .continuous)
                     .stroke(Geist.Colors.border, lineWidth: 1)
             )
+            .shadow(color: Geist.Colors.shadow, radius: 18, x: 0, y: 10)
     }
 }
 
@@ -172,7 +175,7 @@ struct GeistButtonStyle: ButtonStyle {
         case .primary:
             return Geist.Colors.primary
         case .secondary, .icon:
-            return isPressed ? Geist.Colors.neutral : Geist.Colors.background
+            return isPressed ? Geist.Colors.neutral.opacity(0.82) : Geist.Colors.neutral
         case .tertiary:
             return isPressed ? Geist.Colors.overlay : .clear
         }
@@ -209,7 +212,7 @@ struct GeistStatusBadge: View {
         }
         .padding(.horizontal, Geist.Spacing.x2)
         .frame(height: 24)
-        .background(Geist.Colors.background)
+        .background(Geist.Colors.neutral)
         .clipShape(RoundedRectangle(cornerRadius: Geist.Radius.small, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: Geist.Radius.small, style: .continuous)
