@@ -18,7 +18,8 @@ concurrency:
 jobs:
   macos:
     name: macOS app and DMG
-    runs-on: macos-14
+    # Package.swift uses Swift tools 6.0, which requires the Xcode 16 toolchain.
+    runs-on: macos-15
 
     steps:
       - name: Checkout
