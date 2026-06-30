@@ -67,12 +67,6 @@ struct StatsView: View {
                 Text("每日趋势")
                     .font(Geist.Fonts.heading14)
                     .foregroundStyle(Geist.Colors.primary)
-
-                Spacer()
-
-                Text("按天聚合")
-                    .font(Geist.Fonts.label13)
-                    .foregroundStyle(Geist.Colors.secondary)
             }
 
             DailyTrendView(days: model.snapshot.dailyTrend)
