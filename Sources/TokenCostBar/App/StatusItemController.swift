@@ -99,33 +99,23 @@ final class StatusItemController: NSObject {
 
     private static func makeMenuBarIcon() -> NSImage {
         let size = NSSize(width: 18, height: 18)
-        let image = NSImage(size: size, flipped: true) { _ in
+        let image = NSImage(size: size, flipped: false) { _ in
             NSColor.black.setStroke()
             NSColor.black.setFill()
 
-            let path = NSBezierPath()
-            path.move(to: NSPoint(x: 3, y: 11.25))
-            path.curve(
-                to: NSPoint(x: 7.38, y: 7.25),
-                controlPoint1: NSPoint(x: 5.12, y: 11.25),
-                controlPoint2: NSPoint(x: 5.18, y: 7.25)
+            let ring = NSBezierPath()
+            ring.appendArc(
+                withCenter: NSPoint(x: 9, y: 9),
+                radius: 5.3,
+                startAngle: 42,
+                endAngle: -42,
+                clockwise: false
             )
-            path.curve(
-                to: NSPoint(x: 10.92, y: 10.05),
-                controlPoint1: NSPoint(x: 9.1, y: 7.25),
-                controlPoint2: NSPoint(x: 9.02, y: 10.05)
-            )
-            path.curve(
-                to: NSPoint(x: 15, y: 5.25),
-                controlPoint1: NSPoint(x: 13.02, y: 10.05),
-                controlPoint2: NSPoint(x: 12.54, y: 5.25)
-            )
-            path.lineWidth = 1.65
-            path.lineCapStyle = .round
-            path.lineJoinStyle = .round
-            path.stroke()
+            ring.lineWidth = 1.7
+            ring.lineCapStyle = .round
+            ring.stroke()
 
-            NSBezierPath(ovalIn: NSRect(x: 13.65, y: 3.9, width: 2.7, height: 2.7)).fill()
+            NSBezierPath(ovalIn: NSRect(x: 11.75, y: 8.05, width: 1.9, height: 1.9)).fill()
             return true
         }
         image.isTemplate = true
