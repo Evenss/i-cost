@@ -1,10 +1,10 @@
 # TokenCostBar Icon Direction
 
-This folder contains a restrained icon direction for TokenCostBar.
+This folder contains the app icon source used by the packaging scripts.
 
 ## Recommendation
 
-Use `tokencostbar-app-icon.svg` for the transparent glyph direction and `tokencostbar-menubar-template.svg` for the macOS menu bar template icon.
+Use `tokencostbar-app-icon.svg` as the source for the generated `.icns` file.
 
 The chosen mark combines:
 
@@ -17,12 +17,8 @@ This keeps the icon aligned with the product principle: the app is a quiet macOS
 
 ## Files
 
-- `tokencostbar-app-icon.svg` - recommended transparent glyph concept.
-- `tokencostbar-menubar-template.svg` - recommended single-color menu bar template icon.
-- `exports/tokencostbar-app-icon-1024.png` - PNG render for review and packaging preparation.
-- `variants/*.svg` - six comparison directions.
-- `icon-showcase.html` - local preview page.
+- `tokencostbar-app-icon.svg` - transparent glyph source for the packaged app icon.
 
 ## Notes
 
-For macOS integration, the menu bar asset should be rendered as a template image so the system can apply active, inactive, light mode, and dark mode tinting.
+For macOS integration, the menu bar icon is drawn in code as a template image so the system can apply active, inactive, light mode, and dark mode tinting.

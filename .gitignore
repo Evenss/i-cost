@@ -3,6 +3,7 @@
 DerivedData/
 build/
 dist/
+assets/icons/exports/
 *.xcuserdata/
 *.xcuserstate
 .DS_Store
