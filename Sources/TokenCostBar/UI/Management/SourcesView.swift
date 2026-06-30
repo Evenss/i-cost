@@ -67,8 +67,6 @@ struct SourcesView: View {
                 .frame(width: 90, alignment: .leading)
             Text("状态")
                 .frame(width: 112, alignment: .leading)
-            Text("同步")
-                .frame(width: 112, alignment: .leading)
         }
         .font(Geist.Fonts.label12.weight(.semibold))
         .foregroundStyle(Geist.Colors.secondary)
@@ -99,12 +97,6 @@ struct SourcesView: View {
                 .frame(width: 90, alignment: .leading)
 
             GeistStatusBadge(text: statusText(source.status), color: statusColor(source.status))
-                .frame(width: 112, alignment: .leading)
-
-            Text(syncText(source.lastSyncedAt))
-                .font(Geist.Fonts.mono12)
-                .foregroundStyle(Geist.Colors.secondary)
-                .monospacedDigit()
                 .frame(width: 112, alignment: .leading)
         }
         .padding(.horizontal, 16)
@@ -154,10 +146,5 @@ struct SourcesView: View {
         case .error:
             Geist.Colors.red
         }
-    }
-
-    private func syncText(_ date: Date?) -> String {
-        guard let date else { return "-" }
-        return date.formatted(date: .omitted, time: .shortened)
     }
 }
