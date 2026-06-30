@@ -6,9 +6,11 @@ import TokenCostBarCore
 @MainActor
 final class StatusItemController: NSObject {
     private let model: AppModel
+    private let quitAction: () -> Void
     private let statusItem: NSStatusItem
     private let popover = NSPopover()
     private var cancellables = Set<AnyCancellable>()
+    private var keyboardMonitor: Any?
 
     init(
         model: AppModel,
@@ -16,6 +18,7 @@ final class StatusItemController: NSObject {
         quit: @escaping () -> Void
     ) {
         self.model = model
+        quitAction = quit
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         super.init()
 
@@ -38,6 +41,7 @@ final class StatusItemController: NSObject {
     private func configurePopover(openManagement: @escaping () -> Void, quit: @escaping () -> Void) {
         popover.behavior = .transient
         popover.animates = true
+        popover.delegate = self
         popover.contentSize = NSSize(width: 390, height: 390)
         popover.contentViewController = NSHostingController(
             rootView: PopoverView(
@@ -66,6 +70,32 @@ final class StatusItemController: NSObject {
 
         guard let button = statusItem.button else { return }
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+        NSApp.activate(ignoringOtherApps: true)
+        installKeyboardMonitor()
+    }
+
+    private func installKeyboardMonitor() {
+        removeKeyboardMonitor()
+
+        keyboardMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            guard let self else { return event }
+
+            let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+            if flags == .command,
+               event.charactersIgnoringModifiers?.lowercased() == "q" {
+                self.quitAction()
+                return nil
+            }
+
+            return event
+        }
+    }
+
+    private func removeKeyboardMonitor() {
+        if let keyboardMonitor {
+            NSEvent.removeMonitor(keyboardMonitor)
+            self.keyboardMonitor = nil
+        }
     }
 
     private static func makeMenuBarIcon() -> NSImage {
@@ -102,5 +132,11 @@ final class StatusItemController: NSObject {
         image.isTemplate = true
         image.accessibilityDescription = "TokenCostBar"
         return image
+    }
+}
+
+extension StatusItemController: NSPopoverDelegate {
+    func popoverDidClose(_ notification: Notification) {
+        removeKeyboardMonitor()
     }
 }

@@ -45,6 +45,13 @@ private final class ManagementWindow: NSWindow {
             return true
         }
 
+        if event.type == .keyDown,
+           flags == .command,
+           event.charactersIgnoringModifiers?.lowercased() == "q" {
+            NSApp.terminate(nil)
+            return true
+        }
+
         return super.performKeyEquivalent(with: event)
     }
 }
