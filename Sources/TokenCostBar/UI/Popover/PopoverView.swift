@@ -131,7 +131,7 @@ struct PopoverView: View {
                         openManagement(.sources)
                     }
 
-                    footerButton("退出", width: 52, help: "退出应用") {
+                    footerIconButton("power", help: "退出应用") {
                         quit()
                     }
                 }
@@ -158,14 +158,27 @@ struct PopoverView: View {
 
     private func footerButton(
         _ title: String,
-        width: CGFloat = 32,
         help: String,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
             Text(title)
                 .font(Geist.Fonts.button14)
-                .frame(width: width, height: 32)
+                .frame(width: 32, height: 32)
+        }
+        .buttonStyle(GeistButtonStyle(kind: .icon, height: 32))
+        .help(help)
+    }
+
+    private func footerIconButton(
+        _ systemName: String,
+        help: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            Image(systemName: systemName)
+                .font(.system(size: 14, weight: .semibold))
+                .frame(width: 32, height: 32)
         }
         .buttonStyle(GeistButtonStyle(kind: .icon, height: 32))
         .help(help)
