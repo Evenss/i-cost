@@ -1,0 +1,18 @@
+<svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <title>Menu Meter</title>
+  <path
+    d="M25 65H75"
+    stroke="currentColor"
+    stroke-width="6"
+    stroke-linecap="round"
+    opacity="0.18"
+  />
+  <path
+    d="M25 58C34 58 35 47 44 47C53 47 52 54 60 54C70 54 68 38 77 38"
+    stroke="currentColor"
+    stroke-width="5.6"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <circle cx="77" cy="38" r="5.2" fill="currentColor"/>
+</svg>

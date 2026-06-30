@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TokenCostBar Icon Showcase</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #171b18;
+      --muted: #65706a;
+      --line: #d8ddd8;
+      --surface: #f7f8f6;
+      --panel: #ffffff;
+      --accent: #2f7d74;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--surface);
+      color: var(--ink);
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+      letter-spacing: 0;
+    }
+
+    main {
+      width: min(1120px, calc(100% - 48px));
+      margin: 0 auto;
+      padding: 56px 0 72px;
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: 188px 1fr;
+      gap: 44px;
+      align-items: center;
+      padding-bottom: 38px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      font-size: 34px;
+      line-height: 1.08;
+      font-weight: 650;
+      letter-spacing: 0;
+    }
+
+    .intro {
+      max-width: 620px;
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    .app-icon {
+      width: 188px;
+      height: 188px;
+      display: block;
+    }
+
+    .section {
+      padding-top: 38px;
+    }
+
+    .section-heading {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 24px;
+      margin-bottom: 18px;
+    }
+
+    h2 {
+      font-size: 18px;
+      line-height: 1.25;
+      font-weight: 650;
+      letter-spacing: 0;
+    }
+
+    .note {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .menu-strip {
+      height: 32px;
+      border: 1px solid #cfd5cf;
+      background: linear-gradient(#f8f9f7, #ecefed);
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 7px;
+      padding: 0 13px;
+      box-shadow: 0 1px 0 rgba(255, 255, 255, 0.78) inset;
+    }
+
+    .menu-strip img {
+      width: 18px;
+      height: 18px;
+      opacity: 0.82;
+    }
+
+    .menu-amount {
+      font-size: 13px;
+      font-weight: 560;
+      color: #151917;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .tile {
+      min-height: 210px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      padding: 24px;
+      display: grid;
+      grid-template-rows: 92px auto;
+      gap: 18px;
+    }
+
+    .tile.recommended {
+      border-color: rgba(47, 125, 116, 0.46);
+      box-shadow: 0 0 0 1px rgba(47, 125, 116, 0.14) inset;
+    }
+
+    .mark {
+      width: 92px;
+      height: 92px;
+      color: var(--ink);
+      align-self: center;
+    }
+
+    h3 {
+      font-size: 15px;
+      line-height: 1.3;
+      font-weight: 650;
+      letter-spacing: 0;
+    }
+
+    .label {
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 8px;
+    }
+
+    .rationale {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 760px) {
+      main {
+        width: min(100% - 28px, 1120px);
+        padding-top: 32px;
+      }
+
+      header {
+        grid-template-columns: 1fr;
+        gap: 24px;
+      }
+
+      .app-icon {
+        width: 148px;
+        height: 148px;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .section-heading {
+        display: block;
+      }
+
+      .note {
+        margin-top: 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <img class="app-icon" src="tokencostbar-app-icon.svg" alt="TokenCostBar app icon">
+      <div>
+        <h1>TokenCostBar glyph direction</h1>
+        <p class="intro">A transparent, single-color trend glyph with a terminal cost dot. The mark avoids currency symbols and AI decoration so it can sit naturally beside a status bar amount.</p>
+      </div>
+    </header>
+
+    <section class="section">
+      <div class="section-heading">
+        <h2>Menu bar template</h2>
+        <p class="note">Single-color source for macOS template tinting.</p>
+      </div>
+      <div class="menu-strip">
+        <img src="tokencostbar-menubar-template.svg" alt="Menu bar icon">
+        <span class="menu-amount">$3.42</span>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-heading">
+        <h2>Variants</h2>
+        <p class="note">Six restrained directions generated from the same product idea.</p>
+      </div>
+      <div class="grid">
+        <article class="tile recommended">
+          <img class="mark" src="variants/variant-01-quiet-trend.svg" alt="Quiet Trend mark">
+          <div>
+            <p class="label">Recommended</p>
+            <h3>Quiet Trend</h3>
+            <p class="rationale">Best match for a menu bar utility: one readable line, one computed endpoint, very little noise.</p>
+          </div>
+        </article>
+
+        <article class="tile">
+          <img class="mark" src="variants/variant-02-cost-dot.svg" alt="Cost Dot mark">
+          <div>
+            <h3>Cost Dot</h3>
+            <p class="rationale">More abstract and compact. Good if the icon should feel less chart-like.</p>
+          </div>
+        </article>
+
+        <article class="tile">
+          <img class="mark" src="variants/variant-03-menu-meter.svg" alt="Menu Meter mark">
+          <div>
+            <h3>Menu Meter</h3>
+            <p class="rationale">Adds a faint baseline to imply steady monitoring without becoming a dashboard.</p>
+          </div>
+        </article>
+
+        <article class="tile">
+          <img class="mark" src="variants/variant-04-soft-bars.svg" alt="Soft Bars mark">
+          <div>
+            <h3>Soft Bars</h3>
+            <p class="rationale">A very simple daily trend metaphor. Clear, but a little more generic.</p>
+          </div>
+        </article>
+
+        <article class="tile">
+          <img class="mark" src="variants/variant-05-punched-trend.svg" alt="Punched Trend mark">
+          <div>
+            <h3>Punched Trend</h3>
+            <p class="rationale">A solid token form with the trend removed from it. More logo-like, less utility-like.</p>
+          </div>
+        </article>
+
+        <article class="tile">
+          <img class="mark" src="variants/variant-06-source-pair.svg" alt="Source Pair mark">
+          <div>
+            <h3>Source Pair</h3>
+            <p class="rationale">Two local agent sources resolving into one amount. Useful, but busier at tiny sizes.</p>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

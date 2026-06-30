@@ -1,0 +1,19 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <title>TokenCostBar transparent glyph icon</title>
+  <defs>
+    <mask id="dot-hole">
+      <rect width="1024" height="1024" fill="white"/>
+      <circle cx="764" cy="354" r="30" fill="black"/>
+    </mask>
+  </defs>
+  <g mask="url(#dot-hole)">
+    <path
+      d="M224 636C314 636 322 462 424 462C522 462 516 574 618 574C720 574 686 354 764 354"
+      stroke="#111614"
+      stroke-width="82"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+    <circle cx="764" cy="354" r="82" fill="#111614"/>
+  </g>
+</svg>
