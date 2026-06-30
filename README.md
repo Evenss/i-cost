@@ -13,7 +13,6 @@ agents cost today?
 - Lightweight popover with today, recent daily trend, and per-agent totals
 - Management window for source status and broader stats
 - Local SQLite storage
-- Fixed CNY estimate using `USD x 7`
 - GitHub Actions packaging for `.app`, `.app.zip`, and `.dmg` artifacts
 
 ## Supported Sources
