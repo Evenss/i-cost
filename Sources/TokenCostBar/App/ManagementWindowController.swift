@@ -14,6 +14,8 @@ final class ManagementWindowController: NSWindowController {
         )
 
         window.title = "TokenCostBar"
+        window.isOpaque = false
+        window.backgroundColor = .clear
         window.minSize = NSSize(width: 680, height: 480)
         window.contentViewController = NSHostingController(
             rootView: ManagementView(model: model, navigation: navigation)

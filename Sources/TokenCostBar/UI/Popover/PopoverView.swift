@@ -14,7 +14,9 @@ struct PopoverView: View {
         }
         .padding(Geist.Spacing.x4)
         .frame(width: 390, height: 444, alignment: .topLeading)
-        .background(Geist.Colors.background)
+        .background {
+            NativeMaterialBackground(material: .popover)
+        }
     }
 
     private var todaySection: some View {

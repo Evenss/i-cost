@@ -29,7 +29,10 @@ struct ManagementView: View {
         }
         .scrollIndicators(.automatic)
         .frame(minWidth: 680, minHeight: 480)
-        .background(Geist.Colors.background)
+        .background {
+            NativeMaterialBackground(material: .windowBackground)
+                .ignoresSafeArea()
+        }
     }
 
     private var header: some View {
