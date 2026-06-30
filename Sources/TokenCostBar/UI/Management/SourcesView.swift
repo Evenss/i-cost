@@ -3,6 +3,10 @@ import TokenCostBarCore
 
 struct SourcesView: View {
     @ObservedObject var model: AppModel
+    private let enabledColumnWidth: CGFloat = 90
+    private let statusColumnWidth: CGFloat = 72
+    private let headerHeight: CGFloat = 36
+    private let rowHeight: CGFloat = 48
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -66,14 +70,14 @@ struct SourcesView: View {
             Text("来源")
                 .frame(maxWidth: .infinity, alignment: .leading)
             Text("启用")
-                .frame(width: 90, alignment: .leading)
+                .frame(width: enabledColumnWidth, height: headerHeight, alignment: .center)
             Text("状态")
-                .frame(width: 112, alignment: .leading)
+                .frame(width: statusColumnWidth, height: headerHeight, alignment: .center)
         }
         .font(Geist.Fonts.label12.weight(.semibold))
         .foregroundStyle(Geist.Colors.secondary)
         .padding(.horizontal, 16)
-        .frame(height: 36)
+        .frame(height: headerHeight)
         .background(Geist.Colors.overlay)
     }
 
@@ -83,18 +87,19 @@ struct SourcesView: View {
                 .font(Geist.Fonts.label14.weight(.semibold))
                 .foregroundStyle(Geist.Colors.primary)
                 .lineLimit(1)
-            .frame(maxWidth: .infinity, alignment: .leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .frame(height: rowHeight)
 
             Text(source.isEnabled ? "已启用" : "已停用")
                 .font(Geist.Fonts.label13)
                 .foregroundStyle(source.isEnabled ? Geist.Colors.primary : Geist.Colors.secondary)
-                .frame(width: 90, alignment: .leading)
+                .frame(width: enabledColumnWidth, height: rowHeight, alignment: .center)
 
             SourceStatusDot(status: source.status, color: statusColor(source.status))
-                .frame(width: 112, alignment: .leading)
+                .frame(width: statusColumnWidth, height: rowHeight, alignment: .center)
         }
         .padding(.horizontal, 16)
-        .frame(minHeight: 52)
+        .frame(height: rowHeight)
     }
 
     private var emptyState: some View {
