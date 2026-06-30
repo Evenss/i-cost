@@ -34,6 +34,7 @@ final class AppModel: ObservableObject {
         guard let coordinator else { return }
         guard !isRefreshing else { return }
 
+        let startedAt = Date()
         isRefreshing = true
 
         Task { [weak self, coordinator] in
@@ -46,6 +47,11 @@ final class AppModel: ObservableObject {
                 self?.lastErrorMessage = nil
             } catch {
                 self?.lastErrorMessage = error.localizedDescription
+            }
+
+            let remainingRefreshTime = 0.7 - Date().timeIntervalSince(startedAt)
+            if remainingRefreshTime > 0 {
+                try? await Task.sleep(nanoseconds: UInt64(remainingRefreshTime * 1_000_000_000))
             }
 
             self?.isRefreshing = false
