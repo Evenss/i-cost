@@ -32,6 +32,8 @@ struct AgentCostRow: View {
             Geist.Colors.primary
         case .codex:
             Geist.Colors.blue
+        case .cursor:
+            Geist.Colors.teal
         }
     }
 }

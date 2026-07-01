@@ -105,7 +105,7 @@ UI 不直接读取日志，不直接计算价格。
 
 - `ClaudeCodeAdapter`
 - `CodexAdapter`
-- 后续可增加 `CursorAdapter`
+- `CursorAdapter`
 
 Adapter 职责：
 

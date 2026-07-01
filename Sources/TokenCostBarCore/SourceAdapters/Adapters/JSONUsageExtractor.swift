@@ -25,9 +25,10 @@ struct JSONUsageExtractor {
     func events(
         fromJSONObject object: Any,
         filePath: String,
-        offset: Int64,
+        offset: Int64?,
         fallbackDate: Date,
-        modelOverride: String? = nil
+        modelOverride: String? = nil,
+        stableIDSeed: String? = nil
     ) -> [UsageEvent] {
         let candidates = usageCandidates(in: object)
         guard !candidates.isEmpty else { return [] }
@@ -40,7 +41,9 @@ struct JSONUsageExtractor {
             let tokens = tokenUsage(from: candidate)
             guard tokens.total > 0 else { return nil }
 
-            let stableSource = explicitID ?? "\(filePath):\(offset):\(index):\(model):\(tokens.total)"
+            let candidateID = firstString(in: candidate, matching: KeyGroups.identifier)
+            let fallbackSeed = stableIDSeed ?? "\(filePath):\(offset ?? 0)"
+            let stableSource = candidateID ?? explicitID ?? "\(fallbackSeed):\(index):\(model):\(tokens.total)"
             let id = "\(source.rawValue):\(StableID.hash(stableSource))"
 
             return UsageEvent(

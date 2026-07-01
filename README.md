@@ -13,6 +13,7 @@ Currently supported sources:
 
 - Claude Code: `~/.claude/projects`
 - Codex: `~/.codex/sessions`
+- Cursor: `~/Library/Application Support/Cursor/User`
 
 ## Requirements
 

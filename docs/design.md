@@ -347,13 +347,13 @@ Codex        $12.90
 - 管理界面显示 Sources、Stats
 - 支持 Claude Code
 - 支持 Codex
+- 支持 Cursor
 - 内置模型价格表
 - 固定 USD/CNY = 7
 - 本地 SQLite 聚合
 
 暂不做：
 
-- Cursor 支持
 - 实时汇率
 - 自动更新价格表
 - CSV 导出

@@ -3,6 +3,7 @@ import Foundation
 public enum AgentSource: String, CaseIterable, Codable, Sendable {
     case claudeCode = "claude_code"
     case codex
+    case cursor
 
     public var displayName: String {
         switch self {
@@ -10,6 +11,8 @@ public enum AgentSource: String, CaseIterable, Codable, Sendable {
             "Claude Code"
         case .codex:
             "Codex"
+        case .cursor:
+            "Cursor"
         }
     }
 
@@ -19,6 +22,8 @@ public enum AgentSource: String, CaseIterable, Codable, Sendable {
             ".claude/projects"
         case .codex:
             ".codex/sessions"
+        case .cursor:
+            "Library/Application Support/Cursor/User"
         }
     }
 }
