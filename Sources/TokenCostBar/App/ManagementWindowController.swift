@@ -14,6 +14,7 @@ final class ManagementWindowController: NSWindowController {
         )
 
         window.title = "iCost"
+        window.titleVisibility = .hidden
         window.isOpaque = false
         window.backgroundColor = .clear
         window.minSize = NSSize(width: 680, height: 480)
