@@ -13,7 +13,7 @@ final class ManagementWindowController: NSWindowController {
             defer: false
         )
 
-        window.title = "TokenCostBar"
+        window.title = "iCost"
         window.isOpaque = false
         window.backgroundColor = .clear
         window.minSize = NSSize(width: 680, height: 480)

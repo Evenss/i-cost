@@ -36,7 +36,7 @@ final class StatusItemController: NSObject {
         button.imagePosition = .imageOnly
         button.imageScaling = .scaleNone
         updateStatusBarTitle(model.snapshot.todayUSD)
-        button.toolTip = "TokenCostBar"
+        button.toolTip = "iCost"
         button.target = self
         button.action = #selector(togglePopover(_:))
     }
@@ -199,7 +199,7 @@ final class StatusItemController: NSObject {
             return true
         }
         image.isTemplate = false
-        image.accessibilityDescription = "TokenCostBar \(title.string)"
+        image.accessibilityDescription = "iCost \(title.string)"
         return image
     }
 

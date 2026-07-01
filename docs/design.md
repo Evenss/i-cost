@@ -1,8 +1,8 @@
-# TokenCostBar 设计文档
+# iCost 设计文档
 
 ## 1. 产品定位
 
-TokenCostBar 是一个 macOS 状态栏工具，用来统计本机常见 AI agent 的每日 token 等值花费。
+iCost 是一个 macOS 状态栏工具，用来统计本机常见 AI agent 的每日 token 等值花费。
 
 它不是账本，不是订阅管理工具，也不是复杂 BI 报表。它只做一件事：
 
@@ -380,6 +380,6 @@ Codex        $12.90
 
 ## 10. 一句话总结
 
-TokenCostBar 是一个极简 macOS 状态栏工具，用内置模型价格和固定汇率，把本机 AI agent 的 token usage 转成每日花费趋势。
+iCost 是一个极简 macOS 状态栏工具，用内置模型价格和固定汇率，把本机 AI agent 的 token usage 转成每日花费趋势。
 
 它的前台只显示统计结果，后台处理复杂计算。用户看到的永远应该是清楚、安静、足够少的信息。

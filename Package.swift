@@ -3,7 +3,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "TokenCostBar",
+    name: "i-cost",
     platforms: [
         .macOS(.v14)
     ],

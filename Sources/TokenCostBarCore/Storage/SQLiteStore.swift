@@ -26,7 +26,8 @@ public final class SQLiteStore {
     private var db: OpaquePointer?
 
     public convenience init() throws {
-        if let overridePath = ProcessInfo.processInfo.environment["TOKEN_COST_BAR_DATABASE"],
+        let environment = ProcessInfo.processInfo.environment
+        if let overridePath = environment["I_COST_DATABASE"],
            !overridePath.isEmpty {
             let url = URL(fileURLWithPath: overridePath)
             try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
@@ -714,7 +715,19 @@ public final class SQLiteStore {
             appropriateFor: nil,
             create: true
         )
-        return base.appendingPathComponent("TokenCostBar", isDirectory: true)
+        let directory = base.appendingPathComponent("iCost", isDirectory: true)
+        let legacyDirectory = base.appendingPathComponent("TokenCostBar", isDirectory: true)
+
+        if !FileManager.default.fileExists(atPath: directory.path),
+           FileManager.default.fileExists(atPath: legacyDirectory.path) {
+            do {
+                try FileManager.default.moveItem(at: legacyDirectory, to: directory)
+            } catch {
+                return legacyDirectory
+            }
+        }
+
+        return directory
     }
 }
 
