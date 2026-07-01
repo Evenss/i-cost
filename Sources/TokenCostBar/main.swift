@@ -25,7 +25,7 @@ if CommandLine.arguments.contains("--scan-once") {
 
         exit(0)
     } catch {
-        fputs("TokenCostBar scan failed: \(error.localizedDescription)\n", stderr)
+        fputs("iCost scan failed: \(error.localizedDescription)\n", stderr)
         exit(1)
     }
 }

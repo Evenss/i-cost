@@ -2,13 +2,14 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-APP_NAME="TokenCostBar"
-VERSION="${TOKEN_COST_BAR_VERSION:-0.1.0}"
+APP_NAME="iCost"
+DMG_NAME="i-cost"
+VERSION="${I_COST_VERSION:-0.1.0}"
 BUILD_DIR="$ROOT_DIR/build"
 DIST_DIR="$ROOT_DIR/dist"
 STAGING_DIR="$BUILD_DIR/dmg-staging"
 APP_DIR="$BUILD_DIR/$APP_NAME.app"
-DMG_PATH="$DIST_DIR/$APP_NAME-$VERSION.dmg"
+DMG_PATH="$DIST_DIR/$DMG_NAME-$VERSION.dmg"
 
 cd "$ROOT_DIR"
 

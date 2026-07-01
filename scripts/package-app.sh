@@ -2,30 +2,31 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-APP_NAME="TokenCostBar"
-VERSION="${TOKEN_COST_BAR_VERSION:-0.1.0}"
-BUILD_NUMBER="${TOKEN_COST_BAR_BUILD_NUMBER:-1}"
+APP_NAME="iCost"
+PRODUCT_NAME="${I_COST_PRODUCT_NAME:-TokenCostBar}"
+VERSION="${I_COST_VERSION:-0.1.0}"
+BUILD_NUMBER="${I_COST_BUILD_NUMBER:-1}"
 BUILD_DIR="$ROOT_DIR/build"
 APP_DIR="$BUILD_DIR/$APP_NAME.app"
 CONTENTS_DIR="$APP_DIR/Contents"
 MACOS_DIR="$CONTENTS_DIR/MacOS"
 RESOURCES_DIR="$CONTENTS_DIR/Resources"
-ICON_SOURCE="$ROOT_DIR/assets/icons/tokencostbar-app-icon.svg"
+ICON_SOURCE="$ROOT_DIR/assets/icons/icost-app-icon.svg"
 ICON_PNG="$BUILD_DIR/$APP_NAME-icon-source.png"
 ICONSET_DIR="$BUILD_DIR/$APP_NAME.iconset"
 ICNS_PATH="$RESOURCES_DIR/$APP_NAME.icns"
 
 cd "$ROOT_DIR"
 
-swift build -c release --product "$APP_NAME"
+swift build -c release --product "$PRODUCT_NAME"
 
 rm -rf "$APP_DIR"
 mkdir -p "$MACOS_DIR" "$RESOURCES_DIR"
 
-cp "$ROOT_DIR/.build/release/$APP_NAME" "$MACOS_DIR/$APP_NAME"
+cp "$ROOT_DIR/.build/release/$PRODUCT_NAME" "$MACOS_DIR/$APP_NAME"
 
-if [[ -d "$ROOT_DIR/Sources/$APP_NAME/Resources" ]]; then
-  cp -R "$ROOT_DIR/Sources/$APP_NAME/Resources/." "$RESOURCES_DIR/"
+if [[ -d "$ROOT_DIR/Sources/$PRODUCT_NAME/Resources" ]]; then
+  cp -R "$ROOT_DIR/Sources/$PRODUCT_NAME/Resources/." "$RESOURCES_DIR/"
 fi
 
 if [[ ! -f "$ICON_SOURCE" ]]; then
@@ -71,7 +72,7 @@ cat > "$CONTENTS_DIR/Info.plist" <<PLIST
   <key>CFBundleExecutable</key>
   <string>$APP_NAME</string>
   <key>CFBundleIdentifier</key>
-  <string>local.tokencostbar.app</string>
+  <string>local.icost.app</string>
   <key>CFBundleIconFile</key>
   <string>$APP_NAME</string>
   <key>CFBundleInfoDictionaryVersion</key>

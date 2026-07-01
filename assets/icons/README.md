@@ -1,10 +1,10 @@
-# TokenCostBar Icon Direction
+# iCost Icon Direction
 
 This folder contains the app icon source used by the packaging scripts.
 
 ## Recommendation
 
-Use `tokencostbar-app-icon.svg` as the source for the generated `.icns` file.
+Use `icost-app-icon.svg` as the source for the generated `.icns` file.
 
 The chosen mark combines:
 
@@ -17,9 +17,9 @@ This keeps the icon aligned with the product principle: the app is a quiet macOS
 
 ## Files
 
-- `tokencostbar-app-icon.svg` - white-background source for the packaged app icon.
-- `tokencostbar-app-icon.png` - exported 1024px PNG preview/use asset.
-- `tokencostbar-logo.svg` - transparent scalable `currentColor` logo source for docs, web, and UI use.
+- `icost-app-icon.svg` - white-background source for the packaged app icon.
+- `icost-app-icon.png` - exported 1024px PNG preview/use asset.
+- `icost-logo.svg` - transparent scalable `currentColor` logo source for docs, web, and UI use.
 
 ## Notes
 

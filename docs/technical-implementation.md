@@ -1,4 +1,4 @@
-# TokenCostBar 技术实现方案
+# iCost 技术实现方案
 
 ## 1. 技术目标
 
@@ -39,7 +39,7 @@
 推荐结构：
 
 ```text
-TokenCostBar.app
+iCost.app
 ├── Status Bar Item
 ├── Popover
 ├── Management Window
@@ -628,9 +628,9 @@ Tests/Fixtures/codex/*.jsonl
 ## 15. 文件结构建议
 
 ```text
-TokenCostBar/
+iCost/
 ├── App/
-│   ├── TokenCostBarApp.swift
+│   ├── iCostApp.swift
 │   ├── AppDelegate.swift
 │   └── StatusItemController.swift
 ├── UI/
