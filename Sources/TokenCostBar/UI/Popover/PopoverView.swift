@@ -36,7 +36,7 @@ struct PopoverView: View {
             HStack(alignment: .lastTextBaseline, spacing: 12) {
                 Text(MoneyFormatter.usd(model.snapshot.todayUSD))
                     .font(.system(size: 36, weight: .bold, design: .monospaced))
-                    .foregroundStyle(Geist.Colors.primary)
+                    .foregroundStyle(Geist.Colors.blue)
                     .monospacedDigit()
                     .lineLimit(1)
                     .minimumScaleFactor(0.72)

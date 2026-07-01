@@ -35,7 +35,7 @@ final class StatusItemController: NSObject {
 
         button.image = Self.makeMenuBarIcon()
         button.imagePosition = .imageLeading
-        button.title = MoneyFormatter.statusBarUSD(model.snapshot.todayUSD)
+        updateStatusBarTitle(model.snapshot.todayUSD)
         button.toolTip = "TokenCostBar"
         button.target = self
         button.action = #selector(togglePopover(_:))
@@ -59,9 +59,15 @@ final class StatusItemController: NSObject {
         model.$snapshot
             .receive(on: RunLoop.main)
             .sink { [weak self] snapshot in
-                self?.statusItem.button?.title = MoneyFormatter.statusBarUSD(snapshot.todayUSD)
+                self?.updateStatusBarTitle(snapshot.todayUSD)
             }
             .store(in: &cancellables)
+    }
+
+    private func updateStatusBarTitle(_ value: Decimal) {
+        guard let button = statusItem.button else { return }
+
+        button.attributedTitle = Self.makeStatusBarTitle(MoneyFormatter.statusBarUSD(value))
     }
 
     @objc
@@ -184,6 +190,16 @@ final class StatusItemController: NSObject {
         image.isTemplate = true
         image.accessibilityDescription = "TokenCostBar"
         return image
+    }
+
+    private static func makeStatusBarTitle(_ title: String) -> NSAttributedString {
+        NSAttributedString(
+            string: title,
+            attributes: [
+                .font: NSFont.monospacedDigitSystemFont(ofSize: NSFont.systemFontSize, weight: .semibold),
+                .foregroundColor: NSColor.systemBlue
+            ]
+        )
     }
 }
 
