@@ -178,7 +178,7 @@ final class StatusItemController: NSObject {
             string: title,
             attributes: [
                 .font: font,
-                .foregroundColor: NSColor.systemBlue
+                .foregroundColor: NSColor.labelColor
             ]
         )
         let titleSize = title.size()
