@@ -1,0 +1,10 @@
+<svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title">
+  <title id="title">TokenCostBar cost ring logo</title>
+  <path
+    d="M75.5 33 A29 29 0 1 0 75.5 67"
+    stroke="currentColor"
+    stroke-width="8"
+    stroke-linecap="round"
+  />
+  <circle cx="76.5" cy="50" r="5" fill="currentColor"/>
+</svg>
