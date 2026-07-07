@@ -1,23 +1,34 @@
 import Foundation
 
 public struct DefaultJSONLUsageAdapter: UsageSourceAdapter {
+    public let stateID: String
     public let source: AgentSource
     public let displayName: String
 
     private let fileManager: FileManager
     private let rootURL: URL
+    private let displayPath: String?
+    private let filePathPrefix: String?
     private let extractor: JSONUsageExtractor
 
     public init(
         source: AgentSource,
         fileManager: FileManager = .default,
-        homeDirectory: URL? = nil
+        homeDirectory: URL? = nil,
+        rootURL: URL? = nil,
+        displayName: String? = nil,
+        stateID: String? = nil,
+        displayPath: String? = nil,
+        filePathPrefix: String? = nil
     ) {
         self.source = source
-        self.displayName = source.displayName
+        self.displayName = displayName ?? source.displayName
+        self.stateID = stateID ?? source.rawValue
         self.fileManager = fileManager
+        self.displayPath = displayPath
+        self.filePathPrefix = filePathPrefix
         let home = homeDirectory ?? fileManager.homeDirectoryForCurrentUser
-        rootURL = home.appendingPathComponent(source.defaultRelativePath)
+        self.rootURL = rootURL ?? home.appendingPathComponent(source.defaultRelativePath)
         extractor = JSONUsageExtractor(source: source)
     }
 
@@ -26,19 +37,21 @@ public struct DefaultJSONLUsageAdapter: UsageSourceAdapter {
 
         guard fileManager.fileExists(atPath: rootURL.path, isDirectory: &isDirectory), isDirectory.boolValue else {
             return SourceState(
+                id: stateID,
                 source: source,
                 displayName: displayName,
                 status: .missing,
-                path: abbreviate(rootURL),
+                path: displayPath ?? abbreviate(rootURL),
                 message: "Default log directory was not found."
             )
         }
 
         return SourceState(
+            id: stateID,
             source: source,
             displayName: displayName,
             status: .ready,
-            path: abbreviate(rootURL)
+            path: displayPath ?? abbreviate(rootURL)
         )
     }
 
@@ -53,8 +66,8 @@ public struct DefaultJSONLUsageAdapter: UsageSourceAdapter {
         var updatedCursors: [ScanCursor] = []
 
         for fileURL in files {
-            let filePath = fileURL.path
-            let attributes = try fileManager.attributesOfItem(atPath: filePath)
+            let filePath = identityPath(for: fileURL)
+            let attributes = try fileManager.attributesOfItem(atPath: fileURL.path)
             let fileSize = (attributes[.size] as? NSNumber)?.int64Value ?? 0
             let modifiedAt = attributes[.modificationDate] as? Date
             let existingCursor = cursors[filePath]
@@ -62,6 +75,7 @@ public struct DefaultJSONLUsageAdapter: UsageSourceAdapter {
 
             let fileEvents = try scanFile(
                 fileURL,
+                eventFilePath: filePath,
                 startOffset: startOffset,
                 fallbackDate: modifiedAt ?? Date()
             )
@@ -82,17 +96,23 @@ public struct DefaultJSONLUsageAdapter: UsageSourceAdapter {
         }
 
         let syncedState = SourceState(
+            id: stateID,
             source: source,
             displayName: displayName,
             status: .ready,
-            path: abbreviate(rootURL),
+            path: displayPath ?? abbreviate(rootURL),
             lastSyncedAt: Date()
         )
 
         return SourceScanOutput(state: syncedState, events: events, cursors: updatedCursors)
     }
 
-    private func scanFile(_ fileURL: URL, startOffset: Int64, fallbackDate: Date) throws -> [UsageEvent] {
+    private func scanFile(
+        _ fileURL: URL,
+        eventFilePath: String,
+        startOffset: Int64,
+        fallbackDate: Date
+    ) throws -> [UsageEvent] {
         let fileHandle = try FileHandle(forReadingFrom: fileURL)
         defer { try? fileHandle.close() }
 
@@ -101,14 +121,21 @@ public struct DefaultJSONLUsageAdapter: UsageSourceAdapter {
         guard !data.isEmpty else { return [] }
 
         if fileURL.pathExtension.lowercased() == "json" {
-            return parseJSONDocument(data, filePath: fileURL.path, offset: startOffset, fallbackDate: fallbackDate)
+            return parseJSONDocument(data, filePath: eventFilePath, offset: startOffset, fallbackDate: fallbackDate)
         }
 
-        return parseJSONLines(data, filePath: fileURL.path, startOffset: startOffset, fallbackDate: fallbackDate)
+        return parseJSONLines(
+            data,
+            fileURL: fileURL,
+            filePath: eventFilePath,
+            startOffset: startOffset,
+            fallbackDate: fallbackDate
+        )
     }
 
     private func parseJSONLines(
         _ data: Data,
+        fileURL: URL,
         filePath: String,
         startOffset: Int64,
         fallbackDate: Date
@@ -116,7 +143,7 @@ public struct DefaultJSONLUsageAdapter: UsageSourceAdapter {
         var events: [UsageEvent] = []
         var lineStart = 0
         var lineOffset = startOffset
-        var currentModel = startOffset > 0 ? lastModelBeforeOffset(fileURL: URL(fileURLWithPath: filePath), offset: startOffset) : nil
+        var currentModel = startOffset > 0 ? lastModelBeforeOffset(fileURL: fileURL, offset: startOffset) : nil
 
         for index in 0...data.count {
             let isEnd = index == data.count
@@ -220,5 +247,19 @@ public struct DefaultJSONLUsageAdapter: UsageSourceAdapter {
         let home = fileManager.homeDirectoryForCurrentUser.path
         guard url.path.hasPrefix(home) else { return url.path }
         return "~" + url.path.dropFirst(home.count)
+    }
+
+    private func identityPath(for fileURL: URL) -> String {
+        guard let filePathPrefix else { return fileURL.path }
+
+        let rootPath = rootURL.standardizedFileURL.path
+        let filePath = fileURL.standardizedFileURL.path
+        guard filePath == rootPath || filePath.hasPrefix(rootPath + "/") else {
+            return filePath
+        }
+
+        let relativePath = String(filePath.dropFirst(rootPath.count)).trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        guard !relativePath.isEmpty else { return filePathPrefix }
+        return filePathPrefix + "/" + relativePath
     }
 }

@@ -46,6 +46,7 @@ public final class ScanCoordinator: @unchecked Sendable {
             } catch {
                 try store.upsertSourceState(
                     SourceState(
+                        id: adapter.stateID,
                         source: adapter.source,
                         displayName: adapter.displayName,
                         status: .error,

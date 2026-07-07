@@ -33,4 +33,32 @@ struct DefaultJSONLUsageAdapterTests {
         #expect(output.events.first?.cacheReadInputTokens == 200)
         #expect(output.events.first?.outputTokens == 300)
     }
+
+    @Test
+    func testCustomRootUsesIdentityPathForEventsAndCursors() throws {
+        let cacheRoot = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: cacheRoot, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: cacheRoot) }
+
+        let line = #"{"timestamp":"2026-06-30T00:01:00Z","model":"gpt-5-codex","usage":{"input_tokens":1000,"output_tokens":300}}"# + "\n"
+        let fileURL = cacheRoot.appendingPathComponent("session.jsonl")
+        try line.write(to: fileURL, atomically: true, encoding: .utf8)
+
+        let adapter = DefaultJSONLUsageAdapter(
+            source: .codex,
+            rootURL: cacheRoot,
+            displayName: "Codex @ server",
+            stateID: "remote:server:codex",
+            displayPath: "server:~/.codex/sessions",
+            filePathPrefix: "ssh://server/~/.codex/sessions"
+        )
+
+        let output = try adapter.scan(cursors: [:])
+
+        #expect(output.state.id == "remote:server:codex")
+        #expect(output.state.path == "server:~/.codex/sessions")
+        #expect(output.events.first?.sourceFile == "ssh://server/~/.codex/sessions/session.jsonl")
+        #expect(output.cursors.first?.filePath == "ssh://server/~/.codex/sessions/session.jsonl")
+    }
 }

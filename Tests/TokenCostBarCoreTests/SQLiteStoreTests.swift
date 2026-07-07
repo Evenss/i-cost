@@ -100,4 +100,37 @@ struct SQLiteStoreTests {
         #expect(snapshot.unpricedEventCount == 0)
         #expect(cursors["/tmp/codex.jsonl"] == nil)
     }
+
+    @Test
+    func testSourceStatesSupportMultipleLocationsForSameAgent() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let store = try SQLiteStore(databaseURL: directory.appendingPathComponent("test.sqlite"))
+        try store.upsertSourceState(
+            SourceState(
+                source: .codex,
+                displayName: "Codex",
+                status: .ready,
+                path: "~/.codex/sessions"
+            )
+        )
+        try store.upsertSourceState(
+            SourceState(
+                id: "remote:server:codex",
+                source: .codex,
+                displayName: "Codex @ server",
+                status: .ready,
+                path: "server:~/.codex/sessions"
+            )
+        )
+
+        let states = try store.loadSourceStates()
+        let codexStates = states.filter { $0.source == .codex }
+
+        #expect(codexStates.contains { $0.id == AgentSource.codex.rawValue })
+        #expect(codexStates.contains { $0.id == "remote:server:codex" })
+    }
 }

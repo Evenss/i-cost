@@ -2,21 +2,32 @@ import Foundation
 import SQLite3
 
 public struct CursorUsageAdapter: UsageSourceAdapter {
+    public let stateID: String
     public let source: AgentSource = .cursor
     public let displayName: String
 
     private let fileManager: FileManager
     private let rootURL: URL
+    private let displayPath: String?
+    private let filePathPrefix: String?
     private let extractor: JSONUsageExtractor
 
     public init(
         fileManager: FileManager = .default,
-        homeDirectory: URL? = nil
+        homeDirectory: URL? = nil,
+        rootURL: URL? = nil,
+        displayName: String? = nil,
+        stateID: String? = nil,
+        displayPath: String? = nil,
+        filePathPrefix: String? = nil
     ) {
-        displayName = AgentSource.cursor.displayName
+        self.displayName = displayName ?? AgentSource.cursor.displayName
+        self.stateID = stateID ?? AgentSource.cursor.rawValue
         self.fileManager = fileManager
+        self.displayPath = displayPath
+        self.filePathPrefix = filePathPrefix
         let home = homeDirectory ?? fileManager.homeDirectoryForCurrentUser
-        rootURL = home.appendingPathComponent(AgentSource.cursor.defaultRelativePath)
+        self.rootURL = rootURL ?? home.appendingPathComponent(AgentSource.cursor.defaultRelativePath)
         extractor = JSONUsageExtractor(source: .cursor)
     }
 
@@ -24,19 +35,21 @@ public struct CursorUsageAdapter: UsageSourceAdapter {
         var isDirectory: ObjCBool = false
         guard fileManager.fileExists(atPath: rootURL.path, isDirectory: &isDirectory), isDirectory.boolValue else {
             return SourceState(
+                id: stateID,
                 source: source,
                 displayName: displayName,
                 status: .missing,
-                path: abbreviate(rootURL),
+                path: displayPath ?? abbreviate(rootURL),
                 message: "Cursor data directory was not found."
             )
         }
 
         return SourceState(
+            id: stateID,
             source: source,
             displayName: displayName,
             status: .ready,
-            path: abbreviate(rootURL)
+            path: displayPath ?? abbreviate(rootURL)
         )
     }
 
@@ -51,11 +64,15 @@ public struct CursorUsageAdapter: UsageSourceAdapter {
         var updatedCursors: [ScanCursor] = []
 
         for databaseURL in databases {
-            let filePath = databaseURL.path
-            let attributes = try fileManager.attributesOfItem(atPath: filePath)
+            let filePath = identityPath(for: databaseURL)
+            let attributes = try fileManager.attributesOfItem(atPath: databaseURL.path)
             let fileSize = (attributes[.size] as? NSNumber)?.int64Value ?? 0
             let modifiedAt = attributes[.modificationDate] as? Date
-            let fileEvents = try scanDatabase(databaseURL, fallbackDate: modifiedAt ?? Date())
+            let fileEvents = try scanDatabase(
+                databaseURL,
+                identityFilePath: filePath,
+                fallbackDate: modifiedAt ?? Date()
+            )
             let existingCursor = cursors[filePath]
 
             events.append(contentsOf: fileEvents)
@@ -73,10 +90,11 @@ public struct CursorUsageAdapter: UsageSourceAdapter {
         }
 
         let syncedState = SourceState(
+            id: stateID,
             source: source,
             displayName: displayName,
             status: .ready,
-            path: abbreviate(rootURL),
+            path: displayPath ?? abbreviate(rootURL),
             lastSyncedAt: Date()
         )
 
@@ -102,7 +120,7 @@ public struct CursorUsageAdapter: UsageSourceAdapter {
         return files.sorted { $0.path < $1.path }
     }
 
-    private func scanDatabase(_ databaseURL: URL, fallbackDate: Date) throws -> [UsageEvent] {
+    private func scanDatabase(_ databaseURL: URL, identityFilePath: String, fallbackDate: Date) throws -> [UsageEvent] {
         var database: OpaquePointer?
         guard sqlite3_open_v2(databaseURL.path, &database, SQLITE_OPEN_READONLY | SQLITE_OPEN_FULLMUTEX, nil) == SQLITE_OK else {
             let message = database.flatMap { sqlite3_errmsg($0) }.map { String(cString: $0) } ?? "Unknown SQLite error"
@@ -130,10 +148,10 @@ public struct CursorUsageAdapter: UsageSourceAdapter {
             events.append(
                 contentsOf: extractor.events(
                     fromJSONObject: object,
-                    filePath: databaseURL.path,
+                    filePath: identityFilePath,
                     offset: nil,
                     fallbackDate: fallbackDate,
-                    stableIDSeed: "\(databaseURL.path):\(key)"
+                    stableIDSeed: "\(identityFilePath):\(key)"
                 )
             )
         }
@@ -183,5 +201,19 @@ public struct CursorUsageAdapter: UsageSourceAdapter {
         let home = fileManager.homeDirectoryForCurrentUser.path
         guard url.path.hasPrefix(home) else { return url.path }
         return "~" + url.path.dropFirst(home.count)
+    }
+
+    private func identityPath(for fileURL: URL) -> String {
+        guard let filePathPrefix else { return fileURL.path }
+
+        let rootPath = rootURL.standardizedFileURL.path
+        let filePath = fileURL.standardizedFileURL.path
+        guard filePath == rootPath || filePath.hasPrefix(rootPath + "/") else {
+            return filePath
+        }
+
+        let relativePath = String(filePath.dropFirst(rootPath.count)).trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        guard !relativePath.isEmpty else { return filePathPrefix }
+        return filePathPrefix + "/" + relativePath
     }
 }

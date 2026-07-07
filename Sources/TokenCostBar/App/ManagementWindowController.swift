@@ -7,7 +7,7 @@ final class ManagementWindowController: NSWindowController {
 
     init(model: AppModel) {
         let window = ManagementWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 760, height: 560),
+            contentRect: NSRect(x: 0, y: 0, width: 820, height: 680),
             styleMask: [.titled, .closable, .miniaturizable, .resizable],
             backing: .buffered,
             defer: false
@@ -17,7 +17,7 @@ final class ManagementWindowController: NSWindowController {
         window.titleVisibility = .hidden
         window.isOpaque = false
         window.backgroundColor = .clear
-        window.minSize = NSSize(width: 680, height: 480)
+        window.minSize = NSSize(width: 760, height: 560)
         window.contentViewController = NSHostingController(
             rootView: ManagementView(model: model, navigation: navigation)
         )

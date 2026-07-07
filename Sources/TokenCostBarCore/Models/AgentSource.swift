@@ -49,8 +49,7 @@ public enum SourceStatus: String, Codable, Sendable {
 }
 
 public struct SourceState: Identifiable, Codable, Equatable, Sendable {
-    public var id: String { source.rawValue }
-
+    public let id: String
     public let source: AgentSource
     public var displayName: String
     public var isEnabled: Bool
@@ -60,6 +59,7 @@ public struct SourceState: Identifiable, Codable, Equatable, Sendable {
     public var message: String?
 
     public init(
+        id: String? = nil,
         source: AgentSource,
         displayName: String? = nil,
         isEnabled: Bool = true,
@@ -68,6 +68,7 @@ public struct SourceState: Identifiable, Codable, Equatable, Sendable {
         lastSyncedAt: Date? = nil,
         message: String? = nil
     ) {
+        self.id = id ?? source.rawValue
         self.source = source
         self.displayName = displayName ?? source.displayName
         self.isEnabled = isEnabled

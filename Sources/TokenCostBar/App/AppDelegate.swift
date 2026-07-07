@@ -12,8 +12,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         do {
             let store = try SQLiteStore()
-            let coordinator = ScanCoordinator(store: store)
-            let model = AppModel(coordinator: coordinator)
+            let model = AppModel(store: store)
             self.model = model
 
             statusItemController = StatusItemController(

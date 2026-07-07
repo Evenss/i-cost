@@ -61,9 +61,10 @@ public final class SQLiteStore {
 
     public func upsertSourceState(_ state: SourceState) throws {
         let sql = """
-        INSERT INTO sources (id, display_name, enabled, path, status, last_synced_at, message, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO sources (id, source_id, display_name, enabled, path, status, last_synced_at, message, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(id) DO UPDATE SET
+          source_id = excluded.source_id,
           display_name = excluded.display_name,
           enabled = excluded.enabled,
           path = excluded.path,
@@ -74,21 +75,22 @@ public final class SQLiteStore {
         """
 
         try withStatement(sql) { statement in
-            bindText(state.source.rawValue, to: 1, in: statement)
-            bindText(state.displayName, to: 2, in: statement)
-            sqlite3_bind_int(statement, 3, state.isEnabled ? 1 : 0)
-            bindText(state.path, to: 4, in: statement)
-            bindText(state.status.rawValue, to: 5, in: statement)
-            bindText(state.lastSyncedAt.map(DateFormats.string), to: 6, in: statement)
-            bindText(state.message, to: 7, in: statement)
-            bindText(DateFormats.string(from: Date()), to: 8, in: statement)
+            bindText(state.id, to: 1, in: statement)
+            bindText(state.source.rawValue, to: 2, in: statement)
+            bindText(state.displayName, to: 3, in: statement)
+            sqlite3_bind_int(statement, 4, state.isEnabled ? 1 : 0)
+            bindText(state.path, to: 5, in: statement)
+            bindText(state.status.rawValue, to: 6, in: statement)
+            bindText(state.lastSyncedAt.map(DateFormats.string), to: 7, in: statement)
+            bindText(state.message, to: 8, in: statement)
+            bindText(DateFormats.string(from: Date()), to: 9, in: statement)
             try stepDone(statement)
         }
     }
 
     public func loadSourceStates() throws -> [SourceState] {
         let sql = """
-        SELECT id, display_name, enabled, path, status, last_synced_at, message
+        SELECT id, COALESCE(NULLIF(source_id, ''), id), display_name, enabled, path, status, last_synced_at, message
         FROM sources
         ORDER BY display_name;
         """
@@ -97,30 +99,31 @@ public final class SQLiteStore {
 
         try withStatement(sql) { statement in
             while sqlite3_step(statement) == SQLITE_ROW {
-                let rawSource = columnText(statement, 0)
+                let rawSource = columnText(statement, 1)
                 guard let source = AgentSource(rawValue: rawSource) else {
                     throw SQLiteStoreError.invalidSource(rawSource)
                 }
 
-                let status = SourceStatus(rawValue: columnText(statement, 4)) ?? .error
-                let syncedString = columnOptionalText(statement, 5)
+                let status = SourceStatus(rawValue: columnText(statement, 5)) ?? .error
+                let syncedString = columnOptionalText(statement, 6)
 
                 states.append(
                     SourceState(
+                        id: columnText(statement, 0),
                         source: source,
-                        displayName: columnText(statement, 1),
-                        isEnabled: sqlite3_column_int(statement, 2) == 1,
+                        displayName: columnText(statement, 2),
+                        isEnabled: sqlite3_column_int(statement, 3) == 1,
                         status: status,
-                        path: columnOptionalText(statement, 3),
+                        path: columnOptionalText(statement, 4),
                         lastSyncedAt: syncedString.flatMap(DateFormats.date),
-                        message: columnOptionalText(statement, 6)
+                        message: columnOptionalText(statement, 7)
                     )
                 )
             }
         }
 
-        let knownSources = Set(states.map(\.source))
-        for source in AgentSource.allCases where !knownSources.contains(source) {
+        let knownLocalSourceIDs = Set(states.map(\.id))
+        for source in AgentSource.allCases where !knownLocalSourceIDs.contains(source.rawValue) {
             states.append(
                 SourceState(
                     source: source,
@@ -588,6 +591,7 @@ public final class SQLiteStore {
         try execute("""
         CREATE TABLE IF NOT EXISTS sources (
           id TEXT PRIMARY KEY,
+          source_id TEXT NOT NULL,
           display_name TEXT NOT NULL,
           enabled INTEGER NOT NULL,
           path TEXT,
@@ -597,6 +601,9 @@ public final class SQLiteStore {
           updated_at TEXT NOT NULL
         );
         """)
+
+        try? execute("ALTER TABLE sources ADD COLUMN source_id TEXT;")
+        try execute("UPDATE sources SET source_id = id WHERE source_id IS NULL OR source_id = '';")
 
         try execute("""
         CREATE TABLE IF NOT EXISTS scan_cursors (

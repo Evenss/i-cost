@@ -4,19 +4,38 @@ import TokenCostBarCore
 @MainActor
 final class AppModel: ObservableObject {
     @Published private(set) var snapshot: DashboardSnapshot
+    @Published private(set) var remoteConfiguration: RemoteSourcesConfiguration
     @Published private(set) var isRefreshing = false
     @Published private(set) var lastErrorMessage: String?
+    @Published private(set) var remoteConfigurationError: String?
 
-    private let coordinator: ScanCoordinator?
+    private let store: SQLiteStore?
+    private var coordinator: ScanCoordinator?
     private var refreshTimer: Timer?
 
     init(coordinator: ScanCoordinator) {
+        store = nil
         self.coordinator = coordinator
+        remoteConfiguration = (try? RemoteSourcesConfiguration.loadDefault()) ?? RemoteSourcesConfiguration()
         snapshot = (try? coordinator.currentSnapshot()) ?? .empty
     }
 
+    init(store: SQLiteStore) {
+        self.store = store
+        let configuration = (try? RemoteSourcesConfiguration.loadDefault()) ?? RemoteSourcesConfiguration()
+        remoteConfiguration = configuration
+        coordinator = ScanCoordinator(
+            store: store,
+            adapters: SourceAdapterFactory.localAdapters()
+                + SourceAdapterFactory.remoteAdapters(configuration: configuration)
+        )
+        snapshot = (try? coordinator?.currentSnapshot()) ?? .empty
+    }
+
     init(errorMessage: String) {
+        store = nil
         coordinator = nil
+        remoteConfiguration = RemoteSourcesConfiguration()
         snapshot = .empty
         lastErrorMessage = errorMessage
     }
@@ -55,6 +74,27 @@ final class AppModel: ObservableObject {
             }
 
             self?.isRefreshing = false
+        }
+    }
+
+    func saveRemoteConfiguration(_ configuration: RemoteSourcesConfiguration) {
+        do {
+            try configuration.saveDefault()
+            remoteConfiguration = configuration
+            remoteConfigurationError = nil
+
+            if let store {
+                coordinator = ScanCoordinator(
+                    store: store,
+                    adapters: SourceAdapterFactory.localAdapters()
+                        + SourceAdapterFactory.remoteAdapters(configuration: configuration)
+                )
+            }
+
+            refresh()
+        } catch {
+            remoteConfigurationError = error.localizedDescription
+            lastErrorMessage = error.localizedDescription
         }
     }
 }

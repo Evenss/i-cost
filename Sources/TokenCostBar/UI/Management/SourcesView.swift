@@ -12,6 +12,7 @@ struct SourcesView: View {
         VStack(alignment: .leading, spacing: 16) {
             sectionHeader
             table
+            RemoteSourcesEditorView(model: model)
         }
     }
 
@@ -22,7 +23,7 @@ struct SourcesView: View {
                     .font(Geist.Fonts.heading16)
                     .foregroundStyle(Geist.Colors.primary)
 
-                Text("展示支持的本地 AI Agent 日志读取状态。")
+                Text("展示支持的本地与远程 AI Agent 日志读取状态。")
                     .font(Geist.Fonts.label13)
                     .foregroundStyle(Geist.Colors.secondary)
             }

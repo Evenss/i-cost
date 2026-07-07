@@ -13,9 +13,14 @@ public struct SourceScanOutput: Sendable {
 }
 
 public protocol UsageSourceAdapter {
+    var stateID: String { get }
     var source: AgentSource { get }
     var displayName: String { get }
 
     func discover() -> SourceState
     func scan(cursors: [String: ScanCursor]) throws -> SourceScanOutput
+}
+
+public extension UsageSourceAdapter {
+    var stateID: String { source.rawValue }
 }

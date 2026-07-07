@@ -1,8 +1,8 @@
 # iCost
 
-A minimal macOS menu bar app for tracking local AI agent usage costs.
+A minimal macOS menu bar app for tracking local and SSH remote AI agent usage costs.
 
-iCost reads local AI agent usage logs, estimates cost, and shows today's
+iCost reads local and configured SSH remote AI agent usage logs, estimates cost, and shows today's
 total in the macOS menu bar. Click the menu bar item to see recent daily trend
 and per-agent totals.
 
@@ -18,6 +18,7 @@ Currently supported sources:
 ## Requirements
 
 - macOS 14 or later
+- Key-based SSH access for remote sources
 
 ## Download and Install
 
@@ -39,3 +40,41 @@ Local packaging requires Swift 6 / Xcode 16 or later.
 scripts/package-dmg.sh
 open dist/i-cost-0.1.0.dmg
 ```
+
+## Remote Sources
+
+iCost can include usage logs from remote computers reachable through SSH. The
+remote machine does not need iCost installed; it only needs readable agent log
+directories and non-interactive SSH access from this Mac.
+
+Open **Management > Sources > SSH Remote** to add or edit remote hosts. The app
+writes the same settings to `~/Library/Application Support/iCost/remote-sources.json`.
+You can also create that file manually:
+
+```json
+{
+  "hosts": [
+    {
+      "id": "workstation",
+      "host": "workstation.example.com",
+      "user": "even",
+      "port": 22,
+      "identityFile": "~/.ssh/id_ed25519",
+      "sources": ["claude_code", "codex"],
+      "paths": {
+        "claude_code": "~/.claude/projects",
+        "codex": "~/.codex/sessions"
+      }
+    }
+  ]
+}
+```
+
+If `sources` is omitted, remote hosts default to Claude Code and Codex. Add
+`"cursor"` explicitly for a remote macOS machine with Cursor data. You can also
+set `I_COST_REMOTE_SOURCES=/path/to/remote-sources.json` before launching the app
+to use a different config file.
+
+Run `ssh workstation.example.com` once in Terminal first if the host key has not
+been trusted yet. iCost uses `ssh` and `scp` with `BatchMode=yes`, so password
+prompts are not shown inside the menu bar app.
