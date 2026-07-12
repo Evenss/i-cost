@@ -165,6 +165,7 @@ public struct RemoteUsageSourceAdapter: UsageSourceAdapter {
     private func baseSSHOptions(portFlag: String) -> [String] {
         var arguments = [
             "-o", "BatchMode=yes",
+            "-o", "StrictHostKeyChecking=accept-new",
             "-o", "ConnectTimeout=\(timeoutSeconds)"
         ]
 

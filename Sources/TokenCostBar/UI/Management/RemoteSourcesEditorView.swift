@@ -6,6 +6,9 @@ struct RemoteSourcesEditorView: View {
     @State private var draft = RemoteHostDraft()
     @State private var editingIndex: Int?
     @State private var isShowingEditor = false
+    @State private var isTestingConnection = false
+    @State private var connectionFailed = false
+    @State private var needsSourceDetails = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -35,6 +38,7 @@ struct RemoteSourcesEditorView: View {
             Button {
                 editingIndex = nil
                 draft = RemoteHostDraft()
+                resetConnectionState()
                 isShowingEditor = true
             } label: {
                 Label("添加", systemImage: "plus")
@@ -58,6 +62,7 @@ struct RemoteSourcesEditorView: View {
                         edit: {
                             editingIndex = index
                             draft = RemoteHostDraft(host: host)
+                            resetConnectionState()
                             isShowingEditor = true
                         },
                         delete: {
@@ -73,9 +78,9 @@ struct RemoteSourcesEditorView: View {
             }
         }
         .background(Geist.Colors.backgroundSecondary)
-        .clipShape(RoundedRectangle(cornerRadius: Geist.Radius.small, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: Geist.Radius.medium, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: Geist.Radius.small, style: .continuous)
+            RoundedRectangle(cornerRadius: Geist.Radius.medium, style: .continuous)
                 .stroke(Geist.Colors.border, lineWidth: 1)
         )
     }
@@ -99,54 +104,18 @@ struct RemoteSourcesEditorView: View {
                 .help("取消")
             }
 
-            VStack(spacing: 10) {
-                HStack(spacing: 12) {
-                    RemoteTextField(title: "名称", placeholder: "workstation", text: $draft.id)
-                    RemoteTextField(title: "主机", placeholder: "host.example.com", text: $draft.host)
-                }
+            RemoteTextField(
+                title: "SSH 地址",
+                placeholder: "workstation 或 user@host",
+                text: $draft.host
+            )
 
-                HStack(spacing: 12) {
-                    RemoteTextField(title: "用户", placeholder: NSUserName(), text: $draft.user)
-                    RemoteTextField(title: "端口", placeholder: "22", text: $draft.port)
-                        .frame(maxWidth: 160)
-                    RemoteTextField(title: "超时", placeholder: "8", text: $draft.connectTimeoutSeconds)
-                        .frame(maxWidth: 160)
-                }
-
-                RemoteTextField(title: "私钥", placeholder: "~/.ssh/id_ed25519", text: $draft.identityFile)
+            if connectionFailed {
+                connectionDetails
             }
 
-            VStack(alignment: .leading, spacing: 10) {
-                Text("来源")
-                    .font(Geist.Fonts.label12.weight(.semibold))
-                    .foregroundStyle(Geist.Colors.secondary)
-
-                HStack(spacing: 18) {
-                    Toggle(AgentSource.claudeCode.displayName, isOn: $draft.includeClaudeCode)
-                    Toggle(AgentSource.codex.displayName, isOn: $draft.includeCodex)
-                    Toggle(AgentSource.cursor.displayName, isOn: $draft.includeCursor)
-                }
-                .toggleStyle(.checkbox)
-                .font(Geist.Fonts.label13)
-                .foregroundStyle(Geist.Colors.primary)
-            }
-
-            VStack(spacing: 10) {
-                if draft.includeClaudeCode {
-                    RemoteTextField(title: "Claude 路径", placeholder: "~/.claude/projects", text: $draft.claudePath)
-                }
-
-                if draft.includeCodex {
-                    RemoteTextField(title: "Codex 路径", placeholder: "~/.codex/sessions", text: $draft.codexPath)
-                }
-
-                if draft.includeCursor {
-                    RemoteTextField(
-                        title: "Cursor 路径",
-                        placeholder: "~/Library/Application Support/Cursor/User",
-                        text: $draft.cursorPath
-                    )
-                }
+            if needsSourceDetails {
+                sourceDetails
             }
 
             if let error = model.remoteConfigurationError {
@@ -165,23 +134,91 @@ struct RemoteSourcesEditorView: View {
                 }
                 .buttonStyle(GeistButtonStyle(kind: .tertiary, height: 32))
 
-                Button {
-                    saveDraft()
-                } label: {
-                    Label("保存并刷新", systemImage: "checkmark")
-                        .frame(height: 32)
+                Button(action: primaryAction) {
+                    if isTestingConnection {
+                        ProgressView()
+                            .controlSize(.small)
+                            .frame(height: 32)
+                    } else {
+                        Label(primaryButtonTitle, systemImage: primaryButtonIcon)
+                            .frame(height: 32)
+                    }
                 }
                 .buttonStyle(GeistButtonStyle(kind: .primary, height: 32))
-                .disabled(!draft.canSave)
+                .disabled(isTestingConnection || (needsSourceDetails ? !draft.canSave : !draft.canConnect))
             }
         }
         .padding(16)
         .background(Geist.Colors.backgroundSecondary)
-        .clipShape(RoundedRectangle(cornerRadius: Geist.Radius.small, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: Geist.Radius.medium, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: Geist.Radius.small, style: .continuous)
+            RoundedRectangle(cornerRadius: Geist.Radius.medium, style: .continuous)
                 .stroke(Geist.Colors.border, lineWidth: 1)
         )
+    }
+
+    private var connectionDetails: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("连接失败，请补充 SSH 信息")
+                .font(Geist.Fonts.label13)
+                .foregroundStyle(Geist.Colors.red)
+
+            HStack(spacing: 12) {
+                RemoteTextField(title: "远程用户名", placeholder: "可选", text: $draft.user)
+                RemoteTextField(title: "端口", placeholder: "22", text: $draft.port)
+                    .frame(maxWidth: 160)
+            }
+
+            RemoteTextField(
+                title: "私钥",
+                placeholder: "使用系统 SSH 配置",
+                text: $draft.identityFile
+            )
+        }
+    }
+
+    private var sourceDetails: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("未找到使用记录，请补充日志位置")
+                .font(Geist.Fonts.label13)
+                .foregroundStyle(Geist.Colors.secondary)
+
+            HStack(spacing: 18) {
+                Toggle(AgentSource.claudeCode.displayName, isOn: $draft.includeClaudeCode)
+                Toggle(AgentSource.codex.displayName, isOn: $draft.includeCodex)
+                Toggle(AgentSource.cursor.displayName, isOn: $draft.includeCursor)
+            }
+            .toggleStyle(.checkbox)
+            .font(Geist.Fonts.label13)
+            .foregroundStyle(Geist.Colors.primary)
+
+            if draft.includeClaudeCode {
+                RemoteTextField(title: "Claude 路径", placeholder: "~/.claude/projects", text: $draft.claudePath)
+            }
+
+            if draft.includeCodex {
+                RemoteTextField(title: "Codex 路径", placeholder: "~/.codex/sessions", text: $draft.codexPath)
+            }
+
+            if draft.includeCursor {
+                RemoteTextField(
+                    title: "Cursor 路径",
+                    placeholder: "~/Library/Application Support/Cursor/User",
+                    text: $draft.cursorPath
+                )
+            }
+        }
+    }
+
+    private var primaryButtonTitle: String {
+        if needsSourceDetails {
+            return "保存"
+        }
+        return connectionFailed ? "重新连接" : "连接"
+    }
+
+    private var primaryButtonIcon: String {
+        needsSourceDetails ? "checkmark" : "network"
     }
 
     private var remoteSummary: String {
@@ -203,6 +240,43 @@ struct RemoteSourcesEditorView: View {
         cancelEditing()
     }
 
+    private func primaryAction() {
+        if needsSourceDetails {
+            saveDraft()
+            return
+        }
+
+        Task {
+            await connectAndSave()
+        }
+    }
+
+    @MainActor
+    private func connectAndSave() async {
+        guard let host = draft.configuration else { return }
+
+        isTestingConnection = true
+        let result = await model.probeRemoteHost(host)
+        isTestingConnection = false
+
+        guard result.isConnected else {
+            connectionFailed = true
+            needsSourceDetails = false
+            return
+        }
+
+        connectionFailed = false
+        if result.detectedSources.isEmpty {
+            needsSourceDetails = true
+            return
+        }
+
+        if editingIndex == nil {
+            draft.useDetectedSources(result.detectedSources)
+        }
+        saveDraft()
+    }
+
     private func deleteHost(at index: Int) {
         var hosts = model.remoteConfiguration.hosts
         guard hosts.indices.contains(index) else { return }
@@ -218,7 +292,14 @@ struct RemoteSourcesEditorView: View {
     private func cancelEditing() {
         editingIndex = nil
         draft = RemoteHostDraft()
+        resetConnectionState()
         isShowingEditor = false
+    }
+
+    private func resetConnectionState() {
+        isTestingConnection = false
+        connectionFailed = false
+        needsSourceDetails = false
     }
 }
 
@@ -352,25 +433,49 @@ private struct RemoteHostDraft: Equatable {
     }
 
     var canSave: Bool {
-        !trimmed(host).isEmpty
+        canConnect
             && !selectedSources.isEmpty
+    }
+
+    var canConnect: Bool {
+        parsedAddress != nil
             && parsedPositiveInteger(port) != nil
             && parsedPositiveInteger(connectTimeoutSeconds) != nil
     }
 
     var configuration: RemoteHostConfiguration? {
-        guard canSave else { return nil }
+        guard canConnect, let parsedAddress else { return nil }
 
         return RemoteHostConfiguration(
             id: optionalString(id),
-            host: trimmed(host),
-            user: optionalString(user),
+            host: parsedAddress.host,
+            user: optionalString(user) ?? parsedAddress.user,
             port: integerValue(port),
             identityFile: optionalString(identityFile),
             sources: selectedSources,
             paths: selectedPaths,
             connectTimeoutSeconds: integerValue(connectTimeoutSeconds)
         )
+    }
+
+    mutating func useDetectedSources(_ sources: [AgentSource]) {
+        includeClaudeCode = sources.contains(.claudeCode)
+        includeCodex = sources.contains(.codex)
+        includeCursor = sources.contains(.cursor)
+    }
+
+    private var parsedAddress: (user: String?, host: String)? {
+        let address = trimmed(host)
+        guard !address.isEmpty else { return nil }
+
+        guard let separator = address.lastIndex(of: "@") else {
+            return (nil, address)
+        }
+
+        let addressUser = trimmed(String(address[..<separator]))
+        let addressHost = trimmed(String(address[address.index(after: separator)...]))
+        guard !addressUser.isEmpty, !addressHost.isEmpty else { return nil }
+        return (addressUser, addressHost)
     }
 
     private var selectedSources: [AgentSource] {

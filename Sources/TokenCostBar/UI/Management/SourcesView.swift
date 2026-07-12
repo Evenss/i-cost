@@ -9,9 +9,12 @@ struct SourcesView: View {
     private let rowHeight: CGFloat = 48
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            sectionHeader
-            table
+        VStack(alignment: .leading, spacing: 30) {
+            VStack(alignment: .leading, spacing: 12) {
+                sectionHeader
+                table
+            }
+
             RemoteSourcesEditorView(model: model)
         }
     }
@@ -19,11 +22,11 @@ struct SourcesView: View {
     private var sectionHeader: some View {
         HStack(alignment: .top, spacing: 16) {
             VStack(alignment: .leading, spacing: 6) {
-                Text("采集来源")
+                Text("本地来源")
                     .font(Geist.Fonts.heading16)
                     .foregroundStyle(Geist.Colors.primary)
 
-                Text("展示支持的本地与远程 AI Agent 日志读取状态。")
+                Text("自动读取这台 Mac 上的 AI Agent 使用记录。")
                     .font(Geist.Fonts.label13)
                     .foregroundStyle(Geist.Colors.secondary)
             }
@@ -59,9 +62,9 @@ struct SourcesView: View {
             }
         }
         .background(Geist.Colors.backgroundSecondary)
-        .clipShape(RoundedRectangle(cornerRadius: Geist.Radius.small, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: Geist.Radius.medium, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: Geist.Radius.small, style: .continuous)
+            RoundedRectangle(cornerRadius: Geist.Radius.medium, style: .continuous)
                 .stroke(Geist.Colors.border, lineWidth: 1)
         )
     }

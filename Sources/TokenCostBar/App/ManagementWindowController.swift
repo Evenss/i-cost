@@ -7,20 +7,24 @@ final class ManagementWindowController: NSWindowController {
 
     init(model: AppModel) {
         let window = ManagementWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 820, height: 680),
-            styleMask: [.titled, .closable, .miniaturizable, .resizable],
+            contentRect: NSRect(x: 0, y: 0, width: 980, height: 720),
+            styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
             backing: .buffered,
             defer: false
         )
 
         window.title = "iCost"
         window.titleVisibility = .hidden
+        window.titlebarAppearsTransparent = true
+        window.titlebarSeparatorStyle = .none
+        window.collectionBehavior.insert(.fullScreenNone)
         window.isOpaque = false
         window.backgroundColor = .clear
-        window.minSize = NSSize(width: 760, height: 560)
+        window.minSize = NSSize(width: 840, height: 600)
         window.contentViewController = NSHostingController(
             rootView: ManagementView(model: model, navigation: navigation)
         )
+        window.standardWindowButton(.zoomButton)?.isEnabled = false
 
         super.init(window: window)
     }

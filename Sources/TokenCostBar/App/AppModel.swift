@@ -97,4 +97,10 @@ final class AppModel: ObservableObject {
             lastErrorMessage = error.localizedDescription
         }
     }
+
+    func probeRemoteHost(_ host: RemoteHostConfiguration) async -> RemoteHostProbeResult {
+        await Task.detached(priority: .userInitiated) {
+            RemoteHostProbe(host: host).run()
+        }.value
+    }
 }

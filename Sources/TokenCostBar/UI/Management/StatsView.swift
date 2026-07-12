@@ -16,11 +16,11 @@ struct StatsView: View {
     private var sectionHeader: some View {
         HStack(alignment: .top, spacing: 16) {
             VStack(alignment: .leading, spacing: 6) {
-                Text("统计")
+                Text("花费概览")
                     .font(Geist.Fonts.heading16)
                     .foregroundStyle(Geist.Colors.primary)
 
-                Text("今天、本周、本月与 AI Agent 花费排行。")
+                Text("查看今天、本周和本月的 Token 花费。")
                     .font(Geist.Fonts.label13)
                     .foregroundStyle(Geist.Colors.secondary)
             }
@@ -54,9 +54,9 @@ struct StatsView: View {
         }
         .padding(.horizontal, 16)
         .background(Geist.Colors.backgroundSecondary)
-        .clipShape(RoundedRectangle(cornerRadius: Geist.Radius.small, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: Geist.Radius.medium, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: Geist.Radius.small, style: .continuous)
+            RoundedRectangle(cornerRadius: Geist.Radius.medium, style: .continuous)
                 .stroke(Geist.Colors.border, lineWidth: 1)
         )
     }
@@ -73,9 +73,9 @@ struct StatsView: View {
         }
         .padding(16)
         .background(Geist.Colors.backgroundSecondary)
-        .clipShape(RoundedRectangle(cornerRadius: Geist.Radius.small, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: Geist.Radius.medium, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: Geist.Radius.small, style: .continuous)
+            RoundedRectangle(cornerRadius: Geist.Radius.medium, style: .continuous)
                 .stroke(Geist.Colors.border, lineWidth: 1)
         )
     }
@@ -101,9 +101,9 @@ struct StatsView: View {
                     .frame(maxWidth: .infinity, minHeight: 42, alignment: .leading)
                     .padding(.horizontal, 12)
                     .background(Geist.Colors.backgroundSecondary)
-                    .clipShape(RoundedRectangle(cornerRadius: Geist.Radius.small, style: .continuous))
+                    .clipShape(RoundedRectangle(cornerRadius: Geist.Radius.medium, style: .continuous))
                     .overlay(
-                        RoundedRectangle(cornerRadius: Geist.Radius.small, style: .continuous)
+                        RoundedRectangle(cornerRadius: Geist.Radius.medium, style: .continuous)
                             .stroke(Geist.Colors.border, lineWidth: 1)
                     )
             } else {
@@ -118,18 +118,18 @@ struct StatsView: View {
                     }
                 }
                 .background(Geist.Colors.backgroundSecondary)
-                .clipShape(RoundedRectangle(cornerRadius: Geist.Radius.small, style: .continuous))
+                .clipShape(RoundedRectangle(cornerRadius: Geist.Radius.medium, style: .continuous))
                 .overlay(
-                    RoundedRectangle(cornerRadius: Geist.Radius.small, style: .continuous)
+                    RoundedRectangle(cornerRadius: Geist.Radius.medium, style: .continuous)
                         .stroke(Geist.Colors.border, lineWidth: 1)
                 )
             }
         }
         .padding(16)
         .background(Geist.Colors.backgroundSecondary)
-        .clipShape(RoundedRectangle(cornerRadius: Geist.Radius.small, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: Geist.Radius.medium, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: Geist.Radius.small, style: .continuous)
+            RoundedRectangle(cornerRadius: Geist.Radius.medium, style: .continuous)
                 .stroke(Geist.Colors.border, lineWidth: 1)
         )
     }
@@ -144,9 +144,9 @@ struct StatsView: View {
                 .padding(12)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(Geist.Colors.backgroundSecondary)
-                .clipShape(RoundedRectangle(cornerRadius: Geist.Radius.small, style: .continuous))
+                .clipShape(RoundedRectangle(cornerRadius: Geist.Radius.medium, style: .continuous))
                 .overlay(
-                    RoundedRectangle(cornerRadius: Geist.Radius.small, style: .continuous)
+                    RoundedRectangle(cornerRadius: Geist.Radius.medium, style: .continuous)
                         .stroke(Geist.Colors.border, lineWidth: 1)
                 )
         }
