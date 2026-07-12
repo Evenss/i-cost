@@ -318,6 +318,71 @@ struct SQLiteStoreTests {
         let states = try store.loadSourceStates()
         #expect(states.map(\.id) == [AgentSource.claudeCode.rawValue])
     }
+
+    @Test
+    func testParserVersionResetOnlyRemovesSelectedSourceOnce() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let store = try SQLiteStore(databaseURL: directory.appendingPathComponent("test.sqlite"))
+        let codexEvent = UsageEvent(
+            id: "codex-before-parser-reset",
+            source: .codex,
+            occurredAt: Date(),
+            modelRawName: "gpt-5.6-sol",
+            inputTokens: 1_000,
+            outputTokens: 100,
+            sourceFile: "/tmp/codex.jsonl"
+        )
+        let claudeEvent = UsageEvent(
+            id: "claude-preserved",
+            source: .claudeCode,
+            occurredAt: Date(),
+            modelRawName: "claude-sonnet-4-5",
+            inputTokens: 1_000,
+            outputTokens: 100,
+            sourceFile: "/tmp/claude.jsonl"
+        )
+        try store.store(
+            events: [codexEvent, claudeEvent],
+            costedEvents: [PriceCatalog().cost(for: codexEvent), PriceCatalog().cost(for: claudeEvent)]
+        )
+        try store.saveCursor(
+            ScanCursor(
+                source: .codex,
+                filePath: "/tmp/codex.jsonl",
+                fileSize: 100,
+                fileModifiedAt: nil,
+                lastOffset: 100
+            )
+        )
+
+        #expect(try store.sourceEventsNeedReset(for: .codex, parserVersion: 2))
+        try store.resetSourceEvents(for: .codex, parserVersion: 2)
+
+        #expect(!(try store.sourceEventsNeedReset(for: .codex, parserVersion: 2)))
+        #expect(try store.loadCursors(for: .codex).isEmpty)
+        #expect(try store.loadUsageEvents().map(\.id) == [claudeEvent.id])
+
+        let codexAfterReset = UsageEvent(
+            id: "codex-after-parser-reset",
+            source: .codex,
+            occurredAt: Date(),
+            modelRawName: "gpt-5.6-sol",
+            inputTokens: 100,
+            outputTokens: 10,
+            sourceFile: "/tmp/codex.jsonl"
+        )
+        try store.store(
+            events: [codexAfterReset],
+            costedEvents: [PriceCatalog().cost(for: codexAfterReset)]
+        )
+        try store.resetSourceEvents(for: .codex, parserVersion: 2)
+
+        #expect(try store.loadUsageEvents().contains { $0.id == codexAfterReset.id })
+    }
 }
 
 private struct ReadyTestAdapter: UsageSourceAdapter {

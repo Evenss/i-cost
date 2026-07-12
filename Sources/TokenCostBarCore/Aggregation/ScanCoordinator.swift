@@ -28,6 +28,11 @@ public final class ScanCoordinator: @unchecked Sendable {
     public func scanAll() throws -> ScanSummary {
         var insertedCount = 0
 
+        if try store.sourceEventsNeedReset(for: .codex, parserVersion: 2),
+           adapters.contains(where: { $0.source == .codex && $0.discover().status == .ready }) {
+            try store.resetSourceEvents(for: .codex, parserVersion: 2)
+        }
+
         try store.deleteSourceStates(excluding: Set(adapters.map(\.stateID)))
         try store.deleteUnknownModelEventsAndResetCursors()
 

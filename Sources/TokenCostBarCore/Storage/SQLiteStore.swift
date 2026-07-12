@@ -114,6 +114,51 @@ public final class SQLiteStore {
         }
     }
 
+    public func sourceEventsNeedReset(for source: AgentSource, parserVersion: Int) throws -> Bool {
+        let key = "parser-version:\(source.rawValue)"
+        var storedVersion: Int?
+
+        try withStatement("SELECT value FROM metadata WHERE key = ?;") { statement in
+            bindText(key, to: 1, in: statement)
+            if sqlite3_step(statement) == SQLITE_ROW {
+                storedVersion = Int(columnText(statement, 0))
+            }
+        }
+
+        return storedVersion != parserVersion
+    }
+
+    public func resetSourceEvents(for source: AgentSource, parserVersion: Int) throws {
+        guard try sourceEventsNeedReset(for: source, parserVersion: parserVersion) else { return }
+
+        try execute("BEGIN IMMEDIATE TRANSACTION;")
+        do {
+            for table in [
+                "costed_usage_events",
+                "usage_events",
+                "scan_cursors",
+                "daily_rollups",
+                "unknown_models"
+            ] {
+                try withStatement("DELETE FROM \(table) WHERE source_id = ?;") { statement in
+                    bindText(source.rawValue, to: 1, in: statement)
+                    try stepDone(statement)
+                }
+            }
+
+            try withStatement("INSERT OR REPLACE INTO metadata (key, value) VALUES (?, ?);") { statement in
+                bindText("parser-version:\(source.rawValue)", to: 1, in: statement)
+                bindText(String(parserVersion), to: 2, in: statement)
+                try stepDone(statement)
+            }
+
+            try execute("COMMIT;")
+        } catch {
+            try? execute("ROLLBACK;")
+            throw error
+        }
+    }
+
     public func loadSourceStates() throws -> [SourceState] {
         let sql = """
         SELECT id, COALESCE(NULLIF(source_id, ''), id), display_name, enabled, path, status, last_synced_at, message
@@ -464,7 +509,7 @@ public final class SQLiteStore {
         return rows
     }
 
-    private func loadUsageEvents() throws -> [UsageEvent] {
+    func loadUsageEvents() throws -> [UsageEvent] {
         let sql = """
         SELECT id, source_id, occurred_at, model_raw_name, input_tokens,
                cache_creation_input_tokens, cache_creation_input_tokens_1h,
@@ -690,6 +735,13 @@ public final class SQLiteStore {
           last_seen_at TEXT NOT NULL,
           event_count INTEGER NOT NULL,
           PRIMARY KEY (model_raw_name, source_id)
+        );
+        """)
+
+        try execute("""
+        CREATE TABLE IF NOT EXISTS metadata (
+          key TEXT PRIMARY KEY,
+          value TEXT NOT NULL
         );
         """)
     }

@@ -91,4 +91,61 @@ struct JSONUsageExtractorTests {
         #expect(events.first?.cacheReadInputTokens == 400)
         #expect(events.first?.outputTokens == 200)
     }
+
+    @Test
+    func testParsesCodexTopLevelCachedInputAsInputSubset() {
+        let extractor = JSONUsageExtractor(source: .codex)
+        let line = """
+        {"timestamp":"2026-07-12T10:00:00Z","type":"event_msg","payload":{"type":"token_count","info":{"total_token_usage":{"input_tokens":1000,"cached_input_tokens":900,"output_tokens":200,"total_tokens":1200},"last_token_usage":{"input_tokens":1000,"cached_input_tokens":900,"output_tokens":200,"total_tokens":1200}}}}
+        """
+
+        let event = extractor.event(
+            fromJSONLine: line,
+            filePath: "/tmp/codex.jsonl",
+            offset: 0,
+            fallbackDate: Date()
+        )
+
+        #expect(event?.inputTokens == 100)
+        #expect(event?.cacheReadInputTokens == 900)
+        #expect(event?.outputTokens == 200)
+    }
+
+    @Test
+    func testRepeatedCodexTokenCountStateUsesStableEventID() {
+        let extractor = JSONUsageExtractor(source: .codex)
+        let firstLine = """
+        {"timestamp":"2026-07-12T10:00:00Z","type":"event_msg","payload":{"type":"token_count","info":{"total_token_usage":{"input_tokens":1000,"cached_input_tokens":900,"output_tokens":200,"total_tokens":1200},"last_token_usage":{"input_tokens":1000,"cached_input_tokens":900,"output_tokens":200,"total_tokens":1200}}}}
+        """
+        let repeatedLine = firstLine.replacingOccurrences(
+            of: "2026-07-12T10:00:00Z",
+            with: "2026-07-12T10:00:01Z"
+        )
+        let advancedLine = firstLine.replacingOccurrences(
+            of: "\"input_tokens\":1000,\"cached_input_tokens\":900,\"output_tokens\":200,\"total_tokens\":1200},\"last_token_usage\"",
+            with: "\"input_tokens\":2000,\"cached_input_tokens\":1800,\"output_tokens\":400,\"total_tokens\":2400},\"last_token_usage\""
+        )
+
+        let first = extractor.event(
+            fromJSONLine: firstLine,
+            filePath: "/tmp/codex.jsonl",
+            offset: 0,
+            fallbackDate: Date()
+        )
+        let repeated = extractor.event(
+            fromJSONLine: repeatedLine,
+            filePath: "/tmp/codex.jsonl",
+            offset: 500,
+            fallbackDate: Date()
+        )
+        let advanced = extractor.event(
+            fromJSONLine: advancedLine,
+            filePath: "/tmp/codex.jsonl",
+            offset: 1_000,
+            fallbackDate: Date()
+        )
+
+        #expect(first?.id == repeated?.id)
+        #expect(first?.id != advanced?.id)
+    }
 }

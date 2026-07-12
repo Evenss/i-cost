@@ -29,7 +29,7 @@ struct DefaultJSONLUsageAdapterTests {
 
         #expect(output.events.count == 1)
         #expect(output.events.first?.modelRawName == "gpt-5.4")
-        #expect(output.events.first?.inputTokens == 1000)
+        #expect(output.events.first?.inputTokens == 800)
         #expect(output.events.first?.cacheReadInputTokens == 200)
         #expect(output.events.first?.outputTokens == 300)
     }

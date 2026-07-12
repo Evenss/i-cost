@@ -4,6 +4,20 @@ import Testing
 
 struct PriceCatalogTests {
     @Test
+    func testGPT56CodexCachedInputUsesOnlyUncachedRemainderAtFullRate() {
+        let event = event(
+            model: "gpt-5.6-sol",
+            inputTokens: 4_272,
+            cacheReadInputTokens: 298_752,
+            outputTokens: 1_154
+        )
+
+        let cost = PriceCatalog().cost(for: event)
+
+        #expect(cost.costUSD == Decimal(string: "0.393402"))
+    }
+
+    @Test
     func testCodexCostUsesInputCachedAndOutputRates() {
         let catalog = PriceCatalog()
         let event = UsageEvent(

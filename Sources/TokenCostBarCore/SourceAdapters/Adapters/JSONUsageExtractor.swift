@@ -36,6 +36,7 @@ struct JSONUsageExtractor {
         let model = modelOverride ?? modelName(in: object) ?? "unknown"
         let occurredAt = firstDate(in: object) ?? fallbackDate
         let explicitID = firstString(in: object, matching: KeyGroups.identifier)
+        let tokenCountStateSeed = tokenCountStateSeed(in: object)
 
         return candidates.enumerated().compactMap { index, candidate in
             let tokens = tokenUsage(from: candidate)
@@ -43,7 +44,10 @@ struct JSONUsageExtractor {
 
             let candidateID = firstString(in: candidate, matching: KeyGroups.identifier)
             let fallbackSeed = stableIDSeed ?? "\(filePath):\(offset ?? 0)"
-            let stableSource = candidateID ?? explicitID ?? "\(fallbackSeed):\(index):\(model):\(tokens.total)"
+            let stableSource = candidateID
+                ?? explicitID
+                ?? tokenCountStateSeed.map { "\(filePath):token-count:\(model):\($0):\(index)" }
+                ?? "\(fallbackSeed):\(index):\(model):\(tokens.total)"
             let id = "\(source.rawValue):\(StableID.hash(stableSource))"
 
             return UsageEvent(
@@ -124,8 +128,8 @@ struct JSONUsageExtractor {
             : (explicitCacheCreation > 0 ? explicitCacheCreation : nestedCacheCreation)
         var cacheRead = explicitCacheRead
 
-        if cacheRead == 0, nestedCached > 0 {
-            cacheRead = nestedCached
+        if nestedCached > 0 {
+            cacheRead = max(cacheRead, nestedCached)
             input = max(0, input - nestedCached)
         }
 
@@ -143,6 +147,40 @@ struct JSONUsageExtractor {
             cacheRead: cacheRead,
             output: output
         )
+    }
+
+    private func tokenCountStateSeed(in object: Any) -> String? {
+        guard let totalUsage = firstDictionary(in: object, matching: "totaltokenusage"),
+              JSONSerialization.isValidJSONObject(totalUsage),
+              let data = try? JSONSerialization.data(withJSONObject: totalUsage, options: [.sortedKeys]) else {
+            return nil
+        }
+
+        return String(data: data, encoding: .utf8)
+    }
+
+    private func firstDictionary(in object: Any, matching normalizedKey: String) -> [String: Any]? {
+        if let dictionary = object as? [String: Any] {
+            for (key, value) in dictionary where normalizeKey(key) == normalizedKey {
+                if let result = value as? [String: Any] {
+                    return result
+                }
+            }
+
+            for value in dictionary.values {
+                if let result = firstDictionary(in: value, matching: normalizedKey) {
+                    return result
+                }
+            }
+        } else if let array = object as? [Any] {
+            for value in array {
+                if let result = firstDictionary(in: value, matching: normalizedKey) {
+                    return result
+                }
+            }
+        }
+
+        return nil
     }
 
     private func containsTokenKey(_ dictionary: [String: Any]) -> Bool {
