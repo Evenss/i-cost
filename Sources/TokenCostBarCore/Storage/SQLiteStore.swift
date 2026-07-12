@@ -88,6 +88,23 @@ public final class SQLiteStore {
         }
     }
 
+    public func deleteSourceStates(excluding activeIDs: Set<String>) throws {
+        guard !activeIDs.isEmpty else {
+            try execute("DELETE FROM sources;")
+            return
+        }
+
+        let placeholders = Array(repeating: "?", count: activeIDs.count).joined(separator: ", ")
+        let sql = "DELETE FROM sources WHERE id NOT IN (\(placeholders));"
+
+        try withStatement(sql) { statement in
+            for (index, id) in activeIDs.sorted().enumerated() {
+                bindText(id, to: Int32(index + 1), in: statement)
+            }
+            try stepDone(statement)
+        }
+    }
+
     public func loadSourceStates() throws -> [SourceState] {
         let sql = """
         SELECT id, COALESCE(NULLIF(source_id, ''), id), display_name, enabled, path, status, last_synced_at, message
@@ -120,17 +137,6 @@ public final class SQLiteStore {
                     )
                 )
             }
-        }
-
-        let knownLocalSourceIDs = Set(states.map(\.id))
-        for source in AgentSource.allCases where !knownLocalSourceIDs.contains(source.rawValue) {
-            states.append(
-                SourceState(
-                    source: source,
-                    status: .missing,
-                    path: nil
-                )
-            )
         }
 
         return states.sorted { $0.displayName < $1.displayName }

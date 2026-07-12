@@ -39,4 +39,35 @@ struct RemoteSourcesConfigurationTests {
         #expect(configuration.hosts.first?.remotePath(for: .codex) == "~/.codex/sessions-custom")
         #expect(configuration.hosts.first?.remotePath(for: .claudeCode) == "~/.claude/projects")
     }
+
+    @Test
+    func testRemovingRemoteChannelKeepsOtherChannelsOnHost() {
+        let host = RemoteHostConfiguration(
+            id: "development",
+            host: "dev.example.com",
+            sources: [.claudeCode, .codex]
+        )
+        let configuration = RemoteSourcesConfiguration(hosts: [host])
+        let stateID = "remote:\(host.stableID):codex"
+
+        let updated = configuration.removing(source: .codex, stateID: stateID)
+
+        #expect(updated.hosts.count == 1)
+        #expect(updated.hosts.first?.enabledSources == [.claudeCode])
+    }
+
+    @Test
+    func testRemovingLastRemoteChannelAlsoRemovesHost() {
+        let host = RemoteHostConfiguration(
+            id: "development",
+            host: "dev.example.com",
+            sources: [.codex]
+        )
+        let configuration = RemoteSourcesConfiguration(hosts: [host])
+        let stateID = "remote:\(host.stableID):codex"
+
+        let updated = configuration.removing(source: .codex, stateID: stateID)
+
+        #expect(updated.hosts.isEmpty)
+    }
 }

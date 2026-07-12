@@ -4,6 +4,7 @@ import TokenCostBarCore
 @MainActor
 final class AppModel: ObservableObject {
     @Published private(set) var snapshot: DashboardSnapshot
+    @Published private(set) var localConfiguration: LocalSourcesConfiguration
     @Published private(set) var remoteConfiguration: RemoteSourcesConfiguration
     @Published private(set) var isRefreshing = false
     @Published private(set) var lastErrorMessage: String?
@@ -12,22 +13,26 @@ final class AppModel: ObservableObject {
     private let store: SQLiteStore?
     private var coordinator: ScanCoordinator?
     private var refreshTimer: Timer?
+    private var refreshRequested = false
 
     init(coordinator: ScanCoordinator) {
         store = nil
         self.coordinator = coordinator
+        localConfiguration = (try? LocalSourcesConfiguration.loadDefault()) ?? LocalSourcesConfiguration()
         remoteConfiguration = (try? RemoteSourcesConfiguration.loadDefault()) ?? RemoteSourcesConfiguration()
         snapshot = (try? coordinator.currentSnapshot()) ?? .empty
     }
 
     init(store: SQLiteStore) {
         self.store = store
-        let configuration = (try? RemoteSourcesConfiguration.loadDefault()) ?? RemoteSourcesConfiguration()
-        remoteConfiguration = configuration
+        let localConfiguration = (try? LocalSourcesConfiguration.loadDefault()) ?? LocalSourcesConfiguration()
+        let remoteConfiguration = (try? RemoteSourcesConfiguration.loadDefault()) ?? RemoteSourcesConfiguration()
+        self.localConfiguration = localConfiguration
+        self.remoteConfiguration = remoteConfiguration
         coordinator = ScanCoordinator(
             store: store,
-            adapters: SourceAdapterFactory.localAdapters()
-                + SourceAdapterFactory.remoteAdapters(configuration: configuration)
+            adapters: SourceAdapterFactory.localAdapters(configuration: localConfiguration)
+                + SourceAdapterFactory.remoteAdapters(configuration: remoteConfiguration)
         )
         snapshot = (try? coordinator?.currentSnapshot()) ?? .empty
     }
@@ -35,6 +40,7 @@ final class AppModel: ObservableObject {
     init(errorMessage: String) {
         store = nil
         coordinator = nil
+        localConfiguration = LocalSourcesConfiguration()
         remoteConfiguration = RemoteSourcesConfiguration()
         snapshot = .empty
         lastErrorMessage = errorMessage
@@ -51,7 +57,10 @@ final class AppModel: ObservableObject {
 
     func refresh() {
         guard let coordinator else { return }
-        guard !isRefreshing else { return }
+        guard !isRefreshing else {
+            refreshRequested = true
+            return
+        }
 
         let startedAt = Date()
         isRefreshing = true
@@ -74,6 +83,10 @@ final class AppModel: ObservableObject {
             }
 
             self?.isRefreshing = false
+            if self?.refreshRequested == true {
+                self?.refreshRequested = false
+                self?.refresh()
+            }
         }
     }
 
@@ -82,18 +95,29 @@ final class AppModel: ObservableObject {
             try configuration.saveDefault()
             remoteConfiguration = configuration
             remoteConfigurationError = nil
-
-            if let store {
-                coordinator = ScanCoordinator(
-                    store: store,
-                    adapters: SourceAdapterFactory.localAdapters()
-                        + SourceAdapterFactory.remoteAdapters(configuration: configuration)
-                )
-            }
-
+            rebuildCoordinator()
             refresh()
         } catch {
             remoteConfigurationError = error.localizedDescription
+            lastErrorMessage = error.localizedDescription
+        }
+    }
+
+    func removeSource(_ source: SourceState) {
+        if source.id.hasPrefix("remote:") {
+            saveRemoteConfiguration(
+                remoteConfiguration.removing(source: source.source, stateID: source.id)
+            )
+            return
+        }
+
+        do {
+            let configuration = localConfiguration.removing(source.source)
+            try configuration.saveDefault()
+            localConfiguration = configuration
+            rebuildCoordinator()
+            refresh()
+        } catch {
             lastErrorMessage = error.localizedDescription
         }
     }
@@ -102,5 +126,14 @@ final class AppModel: ObservableObject {
         await Task.detached(priority: .userInitiated) {
             RemoteHostProbe(host: host).run()
         }.value
+    }
+
+    private func rebuildCoordinator() {
+        guard let store else { return }
+        coordinator = ScanCoordinator(
+            store: store,
+            adapters: SourceAdapterFactory.localAdapters(configuration: localConfiguration)
+                + SourceAdapterFactory.remoteAdapters(configuration: remoteConfiguration)
+        )
     }
 }

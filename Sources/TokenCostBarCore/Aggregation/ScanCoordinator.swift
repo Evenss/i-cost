@@ -28,6 +28,7 @@ public final class ScanCoordinator: @unchecked Sendable {
     public func scanAll() throws -> ScanSummary {
         var insertedCount = 0
 
+        try store.deleteSourceStates(excluding: Set(adapters.map(\.stateID)))
         try store.deleteUnknownModelEventsAndResetCursors()
 
         for adapter in adapters {

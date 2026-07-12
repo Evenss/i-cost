@@ -102,7 +102,7 @@ public struct RemoteUsageSourceAdapter: UsageSourceAdapter {
         try? fileManager.removeItem(at: cacheRootURL)
         try fileManager.createDirectory(at: cacheRootURL, withIntermediateDirectories: true)
 
-        let remoteSpec = "\(host.target):\(remoteShellPath(remotePath, appending: "."))"
+        let remoteSpec = "\(host.target):\(remoteCopyPath(remotePath))"
         let result = try runProcess(
             executablePath: "/usr/bin/scp",
             arguments: scpArguments(remoteSpec: remoteSpec, localPath: cacheRootURL.path),
@@ -154,12 +154,17 @@ public struct RemoteUsageSourceAdapter: UsageSourceAdapter {
         return arguments
     }
 
-    private func scpArguments(remoteSpec: String, localPath: String) -> [String] {
-        var arguments = ["-O", "-q", "-p", "-r"]
+    func scpArguments(remoteSpec: String, localPath: String) -> [String] {
+        var arguments = ["-q", "-p", "-r"]
         arguments.append(contentsOf: baseSSHOptions(portFlag: "-P"))
         arguments.append(remoteSpec)
         arguments.append(localPath)
         return arguments
+    }
+
+    func remoteCopyPath(_ path: String) -> String {
+        let trimmedPath = path.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmedPath.hasSuffix("/") ? trimmedPath + "." : trimmedPath + "/."
     }
 
     private func baseSSHOptions(portFlag: String) -> [String] {

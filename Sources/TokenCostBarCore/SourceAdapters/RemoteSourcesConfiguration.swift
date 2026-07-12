@@ -49,6 +49,24 @@ public struct RemoteSourcesConfiguration: Codable, Equatable, Sendable {
         try data.write(to: url, options: .atomic)
     }
 
+    public func removing(source: AgentSource, stateID: String) -> RemoteSourcesConfiguration {
+        var updatedHosts: [RemoteHostConfiguration] = []
+
+        for host in hosts {
+            let matchesHost = "remote:\(host.stableID):\(source.rawValue)" == stateID
+            guard matchesHost else {
+                updatedHosts.append(host)
+                continue
+            }
+
+            let remainingSources = host.enabledSources.filter { $0 != source }
+            guard !remainingSources.isEmpty else { continue }
+            updatedHosts.append(host.with(sources: remainingSources))
+        }
+
+        return RemoteSourcesConfiguration(hosts: updatedHosts)
+    }
+
     public static func configuredFileURL(
         fileManager: FileManager = .default,
         environment: [String: String] = ProcessInfo.processInfo.environment
@@ -130,5 +148,18 @@ public struct RemoteHostConfiguration: Codable, Equatable, Sendable {
             return configuredPath
         }
         return "~/" + source.defaultRelativePath
+    }
+
+    public func with(sources: [AgentSource]) -> RemoteHostConfiguration {
+        RemoteHostConfiguration(
+            id: id,
+            host: host,
+            user: user,
+            port: port,
+            identityFile: identityFile,
+            sources: sources,
+            paths: paths,
+            connectTimeoutSeconds: connectTimeoutSeconds
+        )
     }
 }

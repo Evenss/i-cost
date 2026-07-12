@@ -5,8 +5,14 @@ public enum SourceAdapterFactory {
         localAdapters() + remoteAdapters()
     }
 
-    public static func localAdapters() -> [UsageSourceAdapter] {
-        AgentSource.allCases.map { source in
+    public static func localAdapters(
+        configuration: LocalSourcesConfiguration? = nil,
+        fileManager: FileManager = .default
+    ) -> [UsageSourceAdapter] {
+        let loadedConfiguration = configuration ?? (try? LocalSourcesConfiguration.loadDefault(fileManager: fileManager))
+        guard let loadedConfiguration else { return [] }
+
+        return loadedConfiguration.sources.map { source in
             switch source {
             case .claudeCode, .codex:
                 DefaultJSONLUsageAdapter(source: source)

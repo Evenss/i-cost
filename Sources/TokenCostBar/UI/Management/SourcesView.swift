@@ -3,8 +3,10 @@ import TokenCostBarCore
 
 struct SourcesView: View {
     @ObservedObject var model: AppModel
+    @State private var pendingRemoval: SourceState?
     private let enabledColumnWidth: CGFloat = 90
     private let statusColumnWidth: CGFloat = 72
+    private let actionColumnWidth: CGFloat = 48
     private let headerHeight: CGFloat = 36
     private let rowHeight: CGFloat = 48
 
@@ -17,16 +19,26 @@ struct SourcesView: View {
 
             RemoteSourcesEditorView(model: model)
         }
+        .alert(item: $pendingRemoval) { source in
+            Alert(
+                title: Text("停用 \(source.displayName)？"),
+                message: Text("来源会从当前配置中移除，历史账单数据会保留。"),
+                primaryButton: .destructive(Text("停用")) {
+                    model.removeSource(source)
+                },
+                secondaryButton: .cancel(Text("取消"))
+            )
+        }
     }
 
     private var sectionHeader: some View {
         HStack(alignment: .top, spacing: 16) {
             VStack(alignment: .leading, spacing: 6) {
-                Text("本地来源")
+                Text("采集来源")
                     .font(Geist.Fonts.heading16)
                     .foregroundStyle(Geist.Colors.primary)
 
-                Text("自动读取这台 Mac 上的 AI Agent 使用记录。")
+                Text("管理本机与 SSH 远程的 AI Agent 使用记录。")
                     .font(Geist.Fonts.label13)
                     .foregroundStyle(Geist.Colors.secondary)
             }
@@ -77,6 +89,8 @@ struct SourcesView: View {
                 .frame(width: enabledColumnWidth, height: headerHeight, alignment: .center)
             Text("状态")
                 .frame(width: statusColumnWidth, height: headerHeight, alignment: .center)
+            Text("操作")
+                .frame(width: actionColumnWidth, height: headerHeight, alignment: .center)
         }
         .font(Geist.Fonts.label12.weight(.semibold))
         .foregroundStyle(Geist.Colors.secondary)
@@ -96,11 +110,21 @@ struct SourcesView: View {
 
             Text(accessText(for: source))
                 .font(Geist.Fonts.label13)
-                .foregroundStyle(source.status == .ready ? Geist.Colors.primary : Geist.Colors.secondary)
+                .foregroundStyle(source.isEnabled ? Geist.Colors.primary : Geist.Colors.secondary)
                 .frame(width: enabledColumnWidth, height: rowHeight, alignment: .center)
 
-            SourceStatusDot(status: source.status, color: statusColor(source.status))
+            SourceStatusDot(status: source.status, color: statusColor(source.status), message: source.message)
                 .frame(width: statusColumnWidth, height: rowHeight, alignment: .center)
+
+            Button {
+                pendingRemoval = source
+            } label: {
+                Image(systemName: "trash")
+                    .frame(width: 30, height: 30)
+            }
+            .buttonStyle(GeistButtonStyle(kind: .icon, height: 30))
+            .frame(width: actionColumnWidth, height: rowHeight, alignment: .center)
+            .help("停用来源")
         }
         .padding(.horizontal, 16)
         .frame(height: rowHeight)
@@ -114,11 +138,11 @@ struct SourcesView: View {
     }
 
     private func accessText(for source: SourceState) -> String {
-        source.status == .ready ? "已接入" : "未接入"
+        source.isEnabled ? "已接入" : "未接入"
     }
 
     private func statusColor(_ status: SourceStatus) -> Color {
-        switch status {
+        return switch status {
         case .ready:
             Geist.Colors.green
         case .missing:
@@ -134,6 +158,7 @@ struct SourcesView: View {
 private struct SourceStatusDot: View {
     let status: SourceStatus
     let color: Color
+    let message: String?
 
     var body: some View {
         Circle()
@@ -148,7 +173,11 @@ private struct SourceStatusDot: View {
     }
 
     private var helpText: String {
-        switch status {
+        if let message, !message.isEmpty {
+            return message
+        }
+
+        return switch status {
         case .ready:
             "可运行"
         case .missing:

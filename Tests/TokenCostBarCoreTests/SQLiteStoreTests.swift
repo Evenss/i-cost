@@ -233,4 +233,76 @@ struct SQLiteStoreTests {
         #expect(codexStates.contains { $0.id == AgentSource.codex.rawValue })
         #expect(codexStates.contains { $0.id == "remote:server:codex" })
     }
+
+    @Test
+    func testDeletingInactiveSourceStatesDoesNotDeleteHistoricalUsage() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let store = try SQLiteStore(databaseURL: directory.appendingPathComponent("test.sqlite"))
+        let event = UsageEvent(
+            id: "historical-codex-event",
+            source: .codex,
+            occurredAt: Date(),
+            modelRawName: "gpt-5-codex",
+            inputTokens: 1_000,
+            outputTokens: 0,
+            sourceFile: "/tmp/codex.jsonl"
+        )
+        try store.upsertSourceState(
+            SourceState(source: .claudeCode, status: .ready, path: "~/.claude/projects")
+        )
+        try store.upsertSourceState(
+            SourceState(source: .codex, status: .ready, path: "~/.codex/sessions")
+        )
+        try store.store(events: [event], costedEvents: [PriceCatalog().cost(for: event)])
+
+        try store.deleteSourceStates(excluding: [AgentSource.claudeCode.rawValue])
+        let states = try store.loadSourceStates()
+        let snapshot = try store.dashboardSnapshot()
+
+        #expect(states.map(\.id) == [AgentSource.claudeCode.rawValue])
+        #expect(snapshot.todayUSD > 0)
+    }
+
+    @Test
+    func testScanCoordinatorRemovesStatesOutsideCurrentAdapterSet() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let store = try SQLiteStore(databaseURL: directory.appendingPathComponent("test.sqlite"))
+        try store.upsertSourceState(
+            SourceState(
+                id: "remote:old-host:codex",
+                source: .codex,
+                displayName: "Codex @ old-host",
+                status: .error,
+                path: "old-host:~/.codex/sessions"
+            )
+        )
+
+        let coordinator = ScanCoordinator(store: store, adapters: [ReadyTestAdapter(source: .claudeCode)])
+        _ = try coordinator.scanAll()
+
+        let states = try store.loadSourceStates()
+        #expect(states.map(\.id) == [AgentSource.claudeCode.rawValue])
+    }
+}
+
+private struct ReadyTestAdapter: UsageSourceAdapter {
+    let source: AgentSource
+
+    var displayName: String { source.displayName }
+
+    func discover() -> SourceState {
+        SourceState(source: source, status: .ready, path: nil)
+    }
+
+    func scan(cursors: [String: ScanCursor]) throws -> SourceScanOutput {
+        SourceScanOutput(state: discover(), events: [], cursors: [])
+    }
 }
