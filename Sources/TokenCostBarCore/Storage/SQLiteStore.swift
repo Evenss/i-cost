@@ -105,6 +105,15 @@ public final class SQLiteStore {
         }
     }
 
+    public func deleteSourceState(id: String) throws {
+        let sql = "DELETE FROM sources WHERE id = ?;"
+
+        try withStatement(sql) { statement in
+            bindText(id, to: 1, in: statement)
+            try stepDone(statement)
+        }
+    }
+
     public func loadSourceStates() throws -> [SourceState] {
         let sql = """
         SELECT id, COALESCE(NULLIF(source_id, ''), id), display_name, enabled, path, status, last_synced_at, message

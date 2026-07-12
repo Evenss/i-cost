@@ -104,20 +104,31 @@ final class AppModel: ObservableObject {
     }
 
     func removeSource(_ source: SourceState) {
-        if source.id.hasPrefix("remote:") {
-            saveRemoteConfiguration(
-                remoteConfiguration.removing(source: source.source, stateID: source.id)
-            )
-            return
-        }
-
         do {
-            let configuration = localConfiguration.removing(source.source)
-            try configuration.saveDefault()
-            localConfiguration = configuration
+            if source.id.hasPrefix("remote:") {
+                let configuration = remoteConfiguration.removing(
+                    source: source.source,
+                    stateID: source.id
+                )
+                try configuration.saveDefault()
+                remoteConfiguration = configuration
+                remoteConfigurationError = nil
+            } else {
+                let configuration = localConfiguration.removing(source.source)
+                try configuration.saveDefault()
+                localConfiguration = configuration
+            }
+
             rebuildCoordinator()
-            refresh()
+            try store?.deleteSourceState(id: source.id)
+            if let store {
+                snapshot = try store.dashboardSnapshot()
+            }
+            lastErrorMessage = nil
         } catch {
+            if source.id.hasPrefix("remote:") {
+                remoteConfigurationError = error.localizedDescription
+            }
             lastErrorMessage = error.localizedDescription
         }
     }

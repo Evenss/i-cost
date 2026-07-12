@@ -268,6 +268,33 @@ struct SQLiteStoreTests {
     }
 
     @Test
+    func testDeletingOneSourceStateImmediatelyUpdatesSnapshot() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let store = try SQLiteStore(databaseURL: directory.appendingPathComponent("test.sqlite"))
+        try store.upsertSourceState(
+            SourceState(source: .claudeCode, status: .ready, path: "~/.claude/projects")
+        )
+        try store.upsertSourceState(
+            SourceState(
+                id: "remote:development:codex",
+                source: .codex,
+                displayName: "Codex @ development",
+                status: .error,
+                path: "development:~/.codex/sessions"
+            )
+        )
+
+        try store.deleteSourceState(id: "remote:development:codex")
+        let snapshot = try store.dashboardSnapshot()
+
+        #expect(snapshot.sourceStates.map(\.id) == [AgentSource.claudeCode.rawValue])
+    }
+
+    @Test
     func testScanCoordinatorRemovesStatesOutsideCurrentAdapterSet() throws {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
