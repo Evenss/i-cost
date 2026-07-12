@@ -53,6 +53,7 @@ struct JSONUsageExtractor {
                 modelRawName: model,
                 inputTokens: tokens.input,
                 cacheCreationInputTokens: tokens.cacheCreation,
+                cacheCreationInputTokens1Hour: tokens.cacheCreation1Hour,
                 cacheReadInputTokens: tokens.cacheRead,
                 outputTokens: tokens.output,
                 sourceFile: filePath,
@@ -99,23 +100,46 @@ struct JSONUsageExtractor {
         let explicitCacheCreation = directInt(in: dictionary, matching: KeyGroups.cacheCreationTokens)
         let explicitCacheRead = directInt(in: dictionary, matching: KeyGroups.cacheReadTokens)
         let nestedCached = recursiveInt(in: dictionary, matching: KeyGroups.cachedTokens)
+        let nestedCacheCreation = nestedInt(in: dictionary, matching: KeyGroups.cacheCreationTokens)
+        // Anthropic may include both a top-level cache_creation total and per-iteration
+        // details. The top-level object is authoritative; recursive lookup is only a
+        // fallback for payloads where the TTL object itself is the usage candidate.
+        let cacheCreationDetails = dictionary.first {
+            normalizeKey($0.key) == KeyGroups.cacheCreationDetailsKey
+        }?.value
+        let cacheCreationContainer = cacheCreationDetails ?? dictionary
+        let cacheCreation5Minutes = recursiveInt(
+            in: cacheCreationContainer,
+            matching: KeyGroups.cacheCreation5MinuteTokens
+        )
+        let cacheCreation1Hour = recursiveInt(
+            in: cacheCreationContainer,
+            matching: KeyGroups.cacheCreation1HourTokens
+        )
+        let hasCacheTTLBreakdown = cacheCreation5Minutes > 0 || cacheCreation1Hour > 0
 
         var input = rawInput
-        let cacheCreation = explicitCacheCreation
+        let cacheCreation = hasCacheTTLBreakdown
+            ? cacheCreation5Minutes
+            : (explicitCacheCreation > 0 ? explicitCacheCreation : nestedCacheCreation)
         var cacheRead = explicitCacheRead
 
         if cacheRead == 0, nestedCached > 0 {
             cacheRead = nestedCached
-            input = max(0, rawInput - nestedCached)
+            input = max(0, input - nestedCached)
         }
 
-        if cacheCreation > 0 {
-            input = rawInput
+        // OpenAI reports cache writes inside input/prompt token details, where they are
+        // already included in the total input count. Anthropic reports cache creation
+        // beside input_tokens, so only nested cache-write counts are subtracted here.
+        if !hasCacheTTLBreakdown, explicitCacheCreation == 0, nestedCacheCreation > 0 {
+            input = max(0, input - nestedCacheCreation)
         }
 
         return TokenUsage(
             input: input,
             cacheCreation: cacheCreation,
+            cacheCreation1Hour: cacheCreation1Hour,
             cacheRead: cacheRead,
             output: output
         )
@@ -157,6 +181,17 @@ struct JSONUsageExtractor {
                 if result > 0 {
                     return result
                 }
+            }
+        }
+
+        return 0
+    }
+
+    private func nestedInt(in dictionary: [String: Any], matching keys: Set<String>) -> Int {
+        for value in dictionary.values {
+            let result = recursiveInt(in: value, matching: keys)
+            if result > 0 {
+                return result
             }
         }
 
@@ -299,15 +334,18 @@ struct JSONUsageExtractor {
 private struct TokenUsage {
     let input: Int
     let cacheCreation: Int
+    let cacheCreation1Hour: Int
     let cacheRead: Int
     let output: Int
 
     var total: Int {
-        input + cacheCreation + cacheRead + output
+        input + cacheCreation + cacheCreation1Hour + cacheRead + output
     }
 }
 
 private enum KeyGroups {
+    static let cacheCreationDetailsKey = "cachecreation"
+
     static let model: Set<String> = [
         "model",
         "modelname",
@@ -353,6 +391,14 @@ private enum KeyGroups {
         "cachecreationtokens"
     ]
 
+    static let cacheCreation5MinuteTokens: Set<String> = [
+        "ephemeral5minputtokens"
+    ]
+
+    static let cacheCreation1HourTokens: Set<String> = [
+        "ephemeral1hinputtokens"
+    ]
+
     static let cacheReadTokens: Set<String> = [
         "cachereadinputtokens",
         "cachereadtokens",
@@ -367,6 +413,8 @@ private enum KeyGroups {
     static let allTokenKeys = inputTokens
         .union(outputTokens)
         .union(cacheCreationTokens)
+        .union(cacheCreation5MinuteTokens)
+        .union(cacheCreation1HourTokens)
         .union(cacheReadTokens)
         .union(cachedTokens)
 }

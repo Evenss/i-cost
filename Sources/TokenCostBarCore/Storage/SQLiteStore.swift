@@ -452,8 +452,8 @@ public final class SQLiteStore {
     private func loadUsageEvents() throws -> [UsageEvent] {
         let sql = """
         SELECT id, source_id, occurred_at, model_raw_name, input_tokens,
-               cache_creation_input_tokens, cache_read_input_tokens, output_tokens,
-               source_file, source_offset
+               cache_creation_input_tokens, cache_creation_input_tokens_1h,
+               cache_read_input_tokens, output_tokens, source_file, source_offset
         FROM usage_events;
         """
 
@@ -465,10 +465,10 @@ public final class SQLiteStore {
                 guard let occurredAt = DateFormats.date(from: columnText(statement, 2)) else { continue }
 
                 let sourceOffset: Int64?
-                if sqlite3_column_type(statement, 9) == SQLITE_NULL {
+                if sqlite3_column_type(statement, 10) == SQLITE_NULL {
                     sourceOffset = nil
                 } else {
-                    sourceOffset = sqlite3_column_int64(statement, 9)
+                    sourceOffset = sqlite3_column_int64(statement, 10)
                 }
 
                 events.append(
@@ -479,9 +479,10 @@ public final class SQLiteStore {
                         modelRawName: columnText(statement, 3),
                         inputTokens: Int(sqlite3_column_int(statement, 4)),
                         cacheCreationInputTokens: Int(sqlite3_column_int(statement, 5)),
-                        cacheReadInputTokens: Int(sqlite3_column_int(statement, 6)),
-                        outputTokens: Int(sqlite3_column_int(statement, 7)),
-                        sourceFile: columnText(statement, 8),
+                        cacheCreationInputTokens1Hour: Int(sqlite3_column_int(statement, 6)),
+                        cacheReadInputTokens: Int(sqlite3_column_int(statement, 7)),
+                        outputTokens: Int(sqlite3_column_int(statement, 8)),
+                        sourceFile: columnText(statement, 9),
                         sourceOffset: sourceOffset
                     )
                 )
@@ -516,10 +517,10 @@ public final class SQLiteStore {
         let sql = """
         INSERT OR IGNORE INTO usage_events (
           id, source_id, occurred_at, model_raw_name, input_tokens,
-          cache_creation_input_tokens, cache_read_input_tokens, output_tokens,
-          source_file, source_offset, created_at
+          cache_creation_input_tokens, cache_creation_input_tokens_1h,
+          cache_read_input_tokens, output_tokens, source_file, source_offset, created_at
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
         """
 
         try withStatement(sql) { statement in
@@ -529,15 +530,16 @@ public final class SQLiteStore {
             bindText(event.modelRawName, to: 4, in: statement)
             sqlite3_bind_int(statement, 5, Int32(event.inputTokens))
             sqlite3_bind_int(statement, 6, Int32(event.cacheCreationInputTokens))
-            sqlite3_bind_int(statement, 7, Int32(event.cacheReadInputTokens))
-            sqlite3_bind_int(statement, 8, Int32(event.outputTokens))
-            bindText(event.sourceFile, to: 9, in: statement)
+            sqlite3_bind_int(statement, 7, Int32(event.cacheCreationInputTokens1Hour))
+            sqlite3_bind_int(statement, 8, Int32(event.cacheReadInputTokens))
+            sqlite3_bind_int(statement, 9, Int32(event.outputTokens))
+            bindText(event.sourceFile, to: 10, in: statement)
             if let sourceOffset = event.sourceOffset {
-                sqlite3_bind_int64(statement, 10, sourceOffset)
+                sqlite3_bind_int64(statement, 11, sourceOffset)
             } else {
-                sqlite3_bind_null(statement, 10)
+                sqlite3_bind_null(statement, 11)
             }
-            bindText(DateFormats.string(from: Date()), to: 11, in: statement)
+            bindText(DateFormats.string(from: Date()), to: 12, in: statement)
             try stepDone(statement)
         }
 
@@ -626,6 +628,7 @@ public final class SQLiteStore {
           model_raw_name TEXT NOT NULL,
           input_tokens INTEGER NOT NULL DEFAULT 0,
           cache_creation_input_tokens INTEGER NOT NULL DEFAULT 0,
+          cache_creation_input_tokens_1h INTEGER NOT NULL DEFAULT 0,
           cache_read_input_tokens INTEGER NOT NULL DEFAULT 0,
           output_tokens INTEGER NOT NULL DEFAULT 0,
           source_file TEXT NOT NULL,
@@ -633,6 +636,12 @@ public final class SQLiteStore {
           created_at TEXT NOT NULL
         );
         """)
+
+        try addColumnIfMissing(
+            table: "usage_events",
+            column: "cache_creation_input_tokens_1h",
+            definition: "INTEGER NOT NULL DEFAULT 0"
+        )
 
         try execute("""
         CREATE TABLE IF NOT EXISTS costed_usage_events (
@@ -674,6 +683,22 @@ public final class SQLiteStore {
         if sqlite3_exec(db, sql, nil, nil, nil) != SQLITE_OK {
             throw SQLiteStoreError.executionFailed(lastErrorMessage)
         }
+    }
+
+    private func addColumnIfMissing(table: String, column: String, definition: String) throws {
+        var hasColumn = false
+
+        try withStatement("PRAGMA table_info(\(table));") { statement in
+            while sqlite3_step(statement) == SQLITE_ROW {
+                if columnText(statement, 1) == column {
+                    hasColumn = true
+                    break
+                }
+            }
+        }
+
+        guard !hasColumn else { return }
+        try execute("ALTER TABLE \(table) ADD COLUMN \(column) \(definition);")
     }
 
     private func withStatement(_ sql: String, _ body: (OpaquePointer?) throws -> Void) throws {
